@@ -45,7 +45,7 @@ make container-build
 
 echo ""
 echo "==> Image ready. Opening container shell..."
-docker run --rm -it --platform linux/arm64 \
+docker run --rm -it \
     -v "$HOME/.config/devopster:/root/.config/devopster" \
     -v "$(pwd):/app" \
     -w /app \

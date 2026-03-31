@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64 rust:1.85-bookworm AS base
+FROM rust:1.85-bookworm AS base
 
 RUN rustup component add clippy rustfmt
 

@@ -52,17 +52,17 @@ auth-status:
 
 ## container-build: Build the dev container image
 container-build:
-	docker build --platform linux/arm64 --target dev -t devopster-cli-dev .
+	docker build --target dev -t devopster-cli-dev .
 
 ## container-test: Run tests inside the container
 container-test:
-	docker build --platform linux/arm64 -t devopster-cli-ci .
-	docker run --rm --platform linux/arm64 devopster-cli-ci cargo test
+	docker build -t devopster-cli-ci .
+	docker run --rm devopster-cli-ci cargo test
 
 ## container-run: Open a shell inside the container with host credentials mounted
 container-run:
-	docker build --platform linux/arm64 --target dev -t devopster-cli-dev .
-	docker run --rm -it --platform linux/arm64 \
+	docker build --target dev -t devopster-cli-dev .
+	docker run --rm -it \
 		-v "$(HOME)/.config/devopster:/root/.config/devopster" \
 		-v "$(PWD):/app" \
 		-w /app \
