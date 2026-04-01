@@ -28,6 +28,15 @@ default_branch: main
 catalog:
   output_path: generated/catalog.json
 
+# Audit policy — controls which checks `devopster repo audit` enforces.
+# All rules default to enabled. Comment out or set to false to disable a check.
+audit:
+  require_description: true      # fail if the repo description is empty
+  require_topics: true           # fail if the repo has fewer topics than min_topics
+  min_topics: 1                  # minimum number of topics required (default: 1)
+  require_license: true          # fail if no license is detected
+  require_default_branch: true   # fail if the default branch does not match `default_branch`
+
 templates:
   - name: azure-overview
     description: Base structure for Azure overview and demo repositories.

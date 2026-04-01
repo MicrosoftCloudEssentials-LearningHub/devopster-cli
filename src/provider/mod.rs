@@ -29,6 +29,11 @@ pub struct RepoSummary {
 #[derive(Debug, Clone)]
 pub struct AuditPolicy {
     pub required_default_branch: String,
+    pub require_description: bool,
+    pub require_topics: bool,
+    pub min_topics: usize,
+    pub require_license: bool,
+    pub require_default_branch: bool,
 }
 
 #[derive(Debug, Clone)]

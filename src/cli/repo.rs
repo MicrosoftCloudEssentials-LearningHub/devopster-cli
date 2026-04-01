@@ -70,6 +70,11 @@ impl RepoCommand {
                         &config.organization,
                         &AuditPolicy {
                             required_default_branch: config.default_branch.clone(),
+                            require_description:    config.audit.require_description,
+                            require_topics:         config.audit.require_topics,
+                            min_topics:             config.audit.min_topics,
+                            require_license:        config.audit.require_license,
+                            require_default_branch: config.audit.require_default_branch,
                         },
                     )
                     .await?;
@@ -209,15 +214,36 @@ impl RepoCommand {
 
 fn print_audit_findings(findings: Vec<AuditFinding>) {
     if findings.is_empty() {
-        println!("Audit passed: no findings.");
+        println!("Audit passed: all repositories meet the configured policy.");
         return;
     }
 
-    println!("Audit findings: {}", findings.len());
-    for finding in findings {
-        println!("- {} [{}]", finding.repository, finding.code);
-        println!("  {}", finding.message);
+    // Group by repository.
+    let mut by_repo: std::collections::BTreeMap<&str, Vec<&AuditFinding>> =
+        std::collections::BTreeMap::new();
+    for f in &findings {
+        by_repo.entry(f.repository.as_str()).or_default().push(f);
     }
+
+    let sep = "-".repeat(64);
+    println!("{sep}");
+    println!(
+        "  Audit findings: {} issue(s) in {} repository(ies)",
+        findings.len(),
+        by_repo.len()
+    );
+    println!("{sep}");
+    for (repo, repo_findings) in &by_repo {
+        println!("  {repo}");
+        for f in repo_findings {
+            println!("    [{}] {}", f.code, f.message);
+        }
+    }
+    println!("{sep}");
+    println!(
+        "  Tip: run 'devopster stats --scope-missing' to scope to these repos,"
+    );
+    println!("  then use 'devopster topics align' or 'devopster repo sync' to fix.");
 }
 
 fn filter_repos(repos: Vec<RepoSummary>, topic: Option<&str>) -> Vec<RepoSummary> {

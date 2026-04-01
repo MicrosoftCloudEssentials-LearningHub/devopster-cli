@@ -17,6 +17,8 @@ pub struct AppConfig {
     pub gitlab: Option<GitLabConfig>,
     pub catalog: CatalogConfig,
     #[serde(default)]
+    pub audit: AuditConfig,
+    #[serde(default)]
     pub templates: Vec<TemplateConfig>,
     /// When non-empty, devopster operations target only these repositories.
     /// An empty list means all repositories in the organization.
@@ -26,6 +28,42 @@ pub struct AppConfig {
     #[serde(default)]
     pub copilot_enabled: bool,
 }
+
+/// Policy rules applied by `devopster repo audit`.
+/// All checks default to enabled. Override in devopster-config.yaml.
+#[derive(Debug, Clone, Deserialize)]
+pub struct AuditConfig {
+    /// Fail if the repository description is empty.
+    #[serde(default = "default_true")]
+    pub require_description: bool,
+    /// Fail if the repository has no topics.
+    #[serde(default = "default_true")]
+    pub require_topics: bool,
+    /// Minimum number of topics required (only checked when require_topics is true).
+    #[serde(default = "default_min_topics")]
+    pub min_topics: usize,
+    /// Fail if no license is detected.
+    #[serde(default = "default_true")]
+    pub require_license: bool,
+    /// Fail if the default branch does not match the top-level `default_branch` setting.
+    #[serde(default = "default_true")]
+    pub require_default_branch: bool,
+}
+
+impl Default for AuditConfig {
+    fn default() -> Self {
+        Self {
+            require_description: true,
+            require_topics: true,
+            min_topics: 1,
+            require_license: true,
+            require_default_branch: true,
+        }
+    }
+}
+
+fn default_true() -> bool { true }
+fn default_min_topics() -> usize { 1 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub enum ProviderKind {

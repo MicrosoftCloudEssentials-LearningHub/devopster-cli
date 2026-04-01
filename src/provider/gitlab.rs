@@ -54,7 +54,7 @@ impl Provider for GitLabProvider {
         let mut findings = Vec::new();
 
         for repository in repositories {
-            if repository.description.trim().is_empty() {
+            if policy.require_description && repository.description.trim().is_empty() {
                 findings.push(AuditFinding {
                     repository: repository.name.clone(),
                     code: "missing-description",
@@ -62,16 +62,23 @@ impl Provider for GitLabProvider {
                 });
             }
 
-            if repository.topics.is_empty() {
-                findings.push(AuditFinding {
-                    repository: repository.name.clone(),
-                    code: "missing-topics",
-                    message: "Repository has no topics configured.".to_string(),
-                });
+            if policy.require_topics {
+                let count = repository.topics.len();
+                if count < policy.min_topics {
+                    findings.push(AuditFinding {
+                        repository: repository.name.clone(),
+                        code: "missing-topics",
+                        message: format!(
+                            "Repository has {count} topic(s); at least {} required.",
+                            policy.min_topics
+                        ),
+                    });
+                }
             }
 
-            if repository.default_branch.as_deref()
-                != Some(policy.required_default_branch.as_str())
+            if policy.require_default_branch
+                && repository.default_branch.as_deref()
+                    != Some(policy.required_default_branch.as_str())
             {
                 let current = repository
                     .default_branch
