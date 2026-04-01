@@ -124,7 +124,7 @@ impl RepoCommand {
                     || !command.blueprint_path.is_empty();
 
                 let files = if use_blueprint {
-                    let blueprint = resolve_blueprint_source(config, command)?;
+                    let blueprint = resolve_blueprint_source(&config, command)?;
                     let (owner, repo) = parse_repo_slug(&blueprint.repo)?;
                     let files = provider
                         .fetch_repository_files(
