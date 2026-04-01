@@ -19,6 +19,8 @@ pub struct AppConfig {
     #[serde(default)]
     pub audit: AuditConfig,
     #[serde(default)]
+    pub blueprint: Option<BlueprintSource>,
+    #[serde(default)]
     pub templates: Vec<TemplateConfig>,
     /// When non-empty, devopster operations target only these repositories.
     /// An empty list means all repositories in the organization.
@@ -107,6 +109,16 @@ pub struct GitLabConfig {
 #[derive(Debug, Clone, Deserialize)]
 pub struct CatalogConfig {
     pub output_path: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct BlueprintSource {
+    /// Org/repo or full GitHub URL for the blueprint source repository.
+    pub repo: String,
+    #[serde(default = "default_branch")]
+    pub branch: String,
+    #[serde(default)]
+    pub paths: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

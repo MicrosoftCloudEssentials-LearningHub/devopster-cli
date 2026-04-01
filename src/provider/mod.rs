@@ -112,6 +112,18 @@ pub trait Provider: Send + Sync {
         Ok(None)
     }
 
+    /// Fetch repository files from a source repo/branch for blueprint sync.
+    /// Providers that do not support repo reads will return an error.
+    async fn fetch_repository_files(
+        &self,
+        _owner: &str,
+        _repository: &str,
+        _branch: &str,
+        _paths: &[String],
+    ) -> Result<Vec<(String, Vec<u8>)>> {
+        anyhow::bail!("fetch_repository_files is not supported by this provider")
+    }
+
     /// Create or update a single file in a repository.
     /// Providers that do not support file push will return an error.
     async fn push_file(

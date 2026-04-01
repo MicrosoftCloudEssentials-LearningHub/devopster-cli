@@ -37,6 +37,13 @@ audit:
   require_license: true          # fail if no license is detected
   require_default_branch: true   # fail if the default branch does not match `default_branch`
 
+# Blueprint source repository used by `devopster repo sync --from-blueprint`.
+blueprint:
+  repo: MicrosoftCloudEssentials-LearningHub/org-repo-template
+  branch: main
+  paths:
+    - .github
+
 templates:
   - name: azure-overview
     description: Base structure for Azure overview and demo repositories.

@@ -21,7 +21,7 @@ pub enum RepoAction {
     Audit(AuditReposCommand),
     /// Interactively fix missing description, topics, and license
     Fix(FixReposCommand),
-    /// Push files from a local directory to all matching repositories
+    /// Sync files from a local directory or the blueprint repository
     Sync(SyncReposCommand),
     /// Create a new repository from a named blueprint
     Blueprint(BlueprintRepoCommand),
@@ -43,6 +43,22 @@ pub struct FixReposCommand {}
 pub struct SyncReposCommand {
     #[arg(long, default_value = ".github")]
     pub source: String,
+
+    /// Sync files from the blueprint source repository instead of local files.
+    #[arg(long, default_value_t = false)]
+    pub from_blueprint: bool,
+
+    /// Override the blueprint source repo (org/repo or GitHub URL).
+    #[arg(long)]
+    pub blueprint_repo: Option<String>,
+
+    /// Override the blueprint source branch (default: main or config default_branch).
+    #[arg(long)]
+    pub blueprint_branch: Option<String>,
+
+    /// Paths to sync from the blueprint repo (repeatable, defaults to .github).
+    #[arg(long, value_name = "PATH")]
+    pub blueprint_path: Vec<String>,
 
     #[arg(long, help = "Only sync to repositories matching this template (by topic overlap)")]
     pub template: Option<String>,
@@ -103,19 +119,42 @@ impl RepoCommand {
                 fix_repos(provider.as_ref(), &config).await?;
             }
             RepoAction::Sync(command) => {
-                let source_path = std::path::Path::new(&command.source);
-                if !source_path.exists() {
-                    anyhow::bail!(
-                        "sync source directory '{}' does not exist",
-                        command.source
-                    );
-                }
+                let use_blueprint = command.from_blueprint
+                    || command.blueprint_repo.is_some()
+                    || !command.blueprint_path.is_empty();
 
-                let files = collect_sync_files(source_path)?;
-                if files.is_empty() {
-                    println!("No files found in '{}'.", command.source);
-                    return Ok(());
-                }
+                let files = if use_blueprint {
+                    let blueprint = resolve_blueprint_source(config, command)?;
+                    let (owner, repo) = parse_repo_slug(&blueprint.repo)?;
+                    let files = provider
+                        .fetch_repository_files(
+                            &owner,
+                            &repo,
+                            &blueprint.branch,
+                            &blueprint.paths,
+                        )
+                        .await?;
+                    if files.is_empty() {
+                        println!("No files found in blueprint repo '{}'.", blueprint.repo);
+                        return Ok(());
+                    }
+                    files
+                } else {
+                    let source_path = std::path::Path::new(&command.source);
+                    if !source_path.exists() {
+                        anyhow::bail!(
+                            "sync source directory '{}' does not exist",
+                            command.source
+                        );
+                    }
+
+                    let files = collect_sync_files(source_path)?;
+                    if files.is_empty() {
+                        println!("No files found in '{}'.", command.source);
+                        return Ok(());
+                    }
+                    files
+                };
 
                 let repos = provider.list_repositories(&config.organization).await?;
                 let repos = scope_to_config(repos, &config.scoped_repos);
@@ -148,10 +187,21 @@ impl RepoCommand {
                     repos_to_sync.len()
                 );
 
-                let commit_msg = format!(
-                    "chore: sync files from devopster (source: {})",
-                    command.source
-                );
+                let commit_msg = if use_blueprint {
+                    let repo_name = command
+                        .blueprint_repo
+                        .as_deref()
+                        .or_else(|| config.blueprint.as_ref().map(|b| b.repo.as_str()))
+                        .unwrap_or("blueprint");
+                    format!(
+                        "chore: sync files from blueprint repo ({repo_name})"
+                    )
+                } else {
+                    format!(
+                        "chore: sync files from devopster (source: {})",
+                        command.source
+                    )
+                };
                 let mut sync_count = 0usize;
                 let mut error_count = 0usize;
 
@@ -257,6 +307,65 @@ fn print_audit_findings(findings: Vec<AuditFinding>) {
         "  Tip: run 'devopster stats --scope-missing' to scope to these repos,"
     );
     println!("  then use 'devopster topics align' or 'devopster repo sync' to fix.");
+}
+
+struct ResolvedBlueprintSource {
+    repo: String,
+    branch: String,
+    paths: Vec<String>,
+}
+
+fn resolve_blueprint_source(
+    config: &AppConfig,
+    command: &SyncReposCommand,
+) -> Result<ResolvedBlueprintSource> {
+    let repo = command
+        .blueprint_repo
+        .clone()
+        .or_else(|| config.blueprint.as_ref().map(|b| b.repo.clone()))
+        .context("blueprint.repo is not configured (set it in devopster-config.yaml)")?;
+
+    let branch = command
+        .blueprint_branch
+        .clone()
+        .or_else(|| config.blueprint.as_ref().map(|b| b.branch.clone()))
+        .unwrap_or_else(|| config.default_branch.clone());
+
+    let mut paths = if !command.blueprint_path.is_empty() {
+        command.blueprint_path.clone()
+    } else {
+        config
+            .blueprint
+            .as_ref()
+            .map(|b| b.paths.clone())
+            .unwrap_or_default()
+    };
+
+    if paths.is_empty() {
+        paths.push(".github".to_string());
+    }
+
+    Ok(ResolvedBlueprintSource { repo, branch, paths })
+}
+
+fn parse_repo_slug(input: &str) -> Result<(String, String)> {
+    let trimmed = input.trim().trim_end_matches('/');
+    let slug = if let Some(pos) = trimmed.find("github.com/") {
+        &trimmed[pos + "github.com/".len()..]
+    } else {
+        trimmed
+    };
+
+    let mut parts = slug.split('/').filter(|p| !p.is_empty());
+    let owner = parts.next().unwrap_or("");
+    let repo = parts.next().unwrap_or("");
+
+    if owner.is_empty() || repo.is_empty() {
+        anyhow::bail!("blueprint repo must be in 'org/repo' or GitHub URL format")
+    }
+
+    let repo = repo.trim_end_matches(".git");
+    Ok((owner.to_string(), repo.to_string()))
 }
 
 async fn fix_repos(provider: &dyn crate::provider::Provider, config: &AppConfig) -> Result<()> {

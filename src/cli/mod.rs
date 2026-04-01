@@ -38,6 +38,7 @@ Commands:
 {tab}| devopster repo fix                            | Prompt to fix missing metadata                    |
 {tab}| devopster repo blueprint                      | Create a new repository from a blueprint          |
 {tab}| devopster repo sync                           | Push files from .github/ to all repositories      |
+{tab}| devopster repo sync --from-blueprint          | Sync files from the blueprint repo                |
 {tab}+-----------------------------------------------+---------------------------------------------------+
 {tab}| devopster catalog generate                    | Export a catalog.json of all repositories         |
 {tab}+-----------------------------------------------+---------------------------------------------------+

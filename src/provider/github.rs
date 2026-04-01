@@ -300,6 +300,54 @@ impl Provider for GitHubProvider {
         Ok(first_readme_line(&text))
     }
 
+    async fn fetch_repository_files(
+        &self,
+        owner: &str,
+        repository: &str,
+        branch: &str,
+        paths: &[String],
+    ) -> Result<Vec<(String, Vec<u8>)>> {
+        let roots = normalize_paths(paths);
+
+        let mut endpoint = self
+            .api_url
+            .join(&format!("/repos/{owner}/{repository}/git/trees/{branch}"))
+            .with_context(|| {
+                format!("failed to build GitHub tree URL for '{owner}/{repository}'")
+            })?;
+        endpoint.query_pairs_mut().append_pair("recursive", "1");
+
+        let response = self.client.get(endpoint).send().await.with_context(|| {
+            format!("failed to fetch repository tree for '{owner}/{repository}'")
+        })?;
+        let response = response.error_for_status().with_context(|| {
+            format!("GitHub tree API returned an error for '{owner}/{repository}'")
+        })?;
+
+        let tree: GitHubTree = response.json().await.with_context(|| {
+            format!("failed to decode tree response for '{owner}/{repository}'")
+        })?;
+
+        let mut files = Vec::new();
+        for entry in tree.tree {
+            if entry.kind != "blob" {
+                continue;
+            }
+            if !matches_any_path(&entry.path, &roots) {
+                continue;
+            }
+
+            if let Some(bytes) = self
+                .fetch_file_bytes(owner, repository, branch, &entry.path)
+                .await?
+            {
+                files.push((entry.path, bytes));
+            }
+        }
+
+        Ok(files)
+    }
+
     async fn push_file(
         &self,
         organization: &str,
@@ -404,6 +452,53 @@ impl GitHubProvider {
         }
 
         Ok(repositories)
+    }
+
+    async fn fetch_file_bytes(
+        &self,
+        owner: &str,
+        repository: &str,
+        branch: &str,
+        path: &str,
+    ) -> Result<Option<Vec<u8>>> {
+        let mut endpoint = self
+            .api_url
+            .join(&format!("/repos/{owner}/{repository}/contents/{path}"))
+            .with_context(|| {
+                format!("failed to build GitHub contents URL for '{owner}/{repository}'")
+            })?;
+        endpoint.query_pairs_mut().append_pair("ref", branch);
+
+        let response = self.client.get(endpoint).send().await.with_context(|| {
+            format!("failed to fetch file '{path}' in '{owner}/{repository}'")
+        })?;
+
+        if response.status() == StatusCode::NOT_FOUND {
+            return Ok(None);
+        }
+
+        let response = response.error_for_status().with_context(|| {
+            format!("GitHub contents API returned an error for '{owner}/{repository}'")
+        })?;
+
+        let content: GitHubFileContent = response.json().await.with_context(|| {
+            format!("failed to decode contents response for '{owner}/{repository}'")
+        })?;
+
+        let encoding = content.encoding.as_deref().unwrap_or("base64");
+        let raw = content.content.unwrap_or_default().replace('\n', "");
+        if raw.is_empty() {
+            return Ok(None);
+        }
+
+        if encoding != "base64" {
+            return Ok(None);
+        }
+
+        let bytes = base64::engine::general_purpose::STANDARD
+            .decode(raw)
+            .with_context(|| format!("failed to decode base64 for '{path}'"))?;
+        Ok(Some(bytes))
     }
 }
 
@@ -512,7 +607,23 @@ struct UpdateGitHubTopicsRequest {
 
 #[derive(Debug, Deserialize)]
 struct GitHubFileContent {
+    #[serde(default)]
+    content: Option<String>,
+    #[serde(default)]
+    encoding: Option<String>,
     sha: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GitHubTree {
+    tree: Vec<GitHubTreeEntry>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GitHubTreeEntry {
+    path: String,
+    #[serde(rename = "type")]
+    kind: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -555,4 +666,22 @@ fn first_readme_line(markdown: &str) -> Option<String> {
         }
     }
     None
+}
+
+fn normalize_paths(paths: &[String]) -> Vec<String> {
+    if paths.is_empty() {
+        return vec![".github".to_string()];
+    }
+
+    paths
+        .iter()
+        .map(|p| p.trim().trim_end_matches('/').to_string())
+        .filter(|p| !p.is_empty())
+        .collect()
+}
+
+fn matches_any_path(path: &str, roots: &[String]) -> bool {
+    roots.iter().any(|root| {
+        path == root || path.starts_with(&format!("{root}/"))
+    })
 }

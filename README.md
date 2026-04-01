@@ -83,6 +83,7 @@ After `make setup` the `devopster` binary is on your `$PATH` and these commands 
 | `devopster repo fix` | Prompt for missing description, topics, and license in scoped repos |
 | `devopster repo blueprint --name <name> --template <template>` | Create a new repository from a template defined in config |
 | `devopster repo sync` | Push files from `.github/` to all repositories |
+| `devopster repo sync --from-blueprint` | Sync pipeline and policy files from the blueprint repo |
 | `devopster catalog generate` | Export a JSON catalog of all repositories |
 | `devopster topics align` | Add missing template topics to every matching repository |
 | `devopster stats` | Print org summary: config, coverage (description/topics/license/branch), compliance, and top topics |
@@ -123,7 +124,12 @@ cp devopster-config.template.yaml devopster-config.yaml
 
 Then set the provider and token environment variables you want to use.
 
-## Next Steps
+Optional: configure a blueprint source repo for `devopster repo sync --from-blueprint`:
 
-- add repository creation and file sync logic *(template structure TBD)*
-- render templates for new repository blueprints *(template structure TBD)*
+```yaml
+blueprint:
+	repo: MicrosoftCloudEssentials-LearningHub/org-repo-template
+	branch: main
+	paths:
+		- .github
+```
