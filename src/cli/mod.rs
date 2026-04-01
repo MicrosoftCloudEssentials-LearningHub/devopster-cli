@@ -35,7 +35,8 @@ Commands:
 {tab}| devopster repo list                           | List repositories in the configured organization  |
 {tab}| devopster repo list --topic <topic>           | Filter repositories by topic                      |
 {tab}| devopster repo audit                          | Audit repos against the configured policy         |
-{tab}| devopster repo scaffold --name <n> --template <t> | Create a new repository from a template      |
+{tab}| devopster repo fix                            | Prompt to fix missing metadata                    |
+{tab}| devopster repo scaffold                       | Create a new repository from a template           |
 {tab}| devopster repo sync                           | Push files from .github/ to all repositories      |
 {tab}+-----------------------------------------------+---------------------------------------------------+
 {tab}| devopster catalog generate                    | Export a catalog.json of all repositories         |

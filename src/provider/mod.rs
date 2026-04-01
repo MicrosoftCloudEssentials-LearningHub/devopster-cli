@@ -91,6 +91,27 @@ pub trait Provider: Send + Sync {
         Ok(())
     }
 
+    /// Update a repository description.
+    /// Providers that do not support metadata updates will return an error.
+    async fn update_description(
+        &self,
+        _organization: &str,
+        _repository: &str,
+        _description: &str,
+    ) -> Result<()> {
+        anyhow::bail!("update_description is not supported by this provider")
+    }
+
+    /// Best-effort fetch of the first non-empty README line for suggestions.
+    /// Providers that do not support README access may return Ok(None).
+    async fn readme_first_line(
+        &self,
+        _organization: &str,
+        _repository: &str,
+    ) -> Result<Option<String>> {
+        Ok(None)
+    }
+
     /// Create or update a single file in a repository.
     /// Providers that do not support file push will return an error.
     async fn push_file(

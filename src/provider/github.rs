@@ -200,6 +200,37 @@ impl Provider for GitHubProvider {
         })
     }
 
+    async fn update_description(
+        &self,
+        organization: &str,
+        repository: &str,
+        description: &str,
+    ) -> Result<()> {
+        let endpoint = self
+            .api_url
+            .join(&format!("/repos/{organization}/{repository}"))
+            .with_context(|| {
+                format!("failed to build GitHub URL for '{organization}/{repository}'")
+            })?;
+
+        self.client
+            .patch(endpoint)
+            .json(&UpdateGitHubRepositoryRequest {
+                description: description.to_string(),
+            })
+            .send()
+            .await
+            .with_context(|| {
+                format!("failed to update description for '{organization}/{repository}'")
+            })?
+            .error_for_status()
+            .with_context(|| {
+                format!("GitHub update repo API returned an error for '{repository}'")
+            })?;
+
+        Ok(())
+    }
+
     async fn align_topics(
         &self,
         organization: &str,
@@ -227,6 +258,46 @@ impl Provider for GitHubProvider {
             })?;
 
         Ok(())
+    }
+
+    async fn readme_first_line(
+        &self,
+        organization: &str,
+        repository: &str,
+    ) -> Result<Option<String>> {
+        let endpoint = self
+            .api_url
+            .join(&format!("/repos/{organization}/{repository}/readme"))
+            .with_context(|| {
+                format!("failed to build GitHub README URL for '{organization}/{repository}'")
+            })?;
+
+        let response = self.client.get(endpoint).send().await.with_context(|| {
+            format!("failed to fetch README for '{organization}/{repository}'")
+        })?;
+
+        if response.status() == StatusCode::NOT_FOUND {
+            return Ok(None);
+        }
+
+        let response = response.error_for_status().with_context(|| {
+            format!("GitHub README API returned an error for '{repository}'")
+        })?;
+
+        let readme: GitHubReadmeContent = response.json().await.with_context(|| {
+            format!("failed to decode README response for '{repository}'")
+        })?;
+
+        if readme.content.trim().is_empty() {
+            return Ok(None);
+        }
+
+        let cleaned = readme.content.replace('\n', "");
+        let bytes = base64::engine::general_purpose::STANDARD
+            .decode(cleaned)
+            .with_context(|| format!("failed to decode README content for '{repository}'"))?;
+        let text = String::from_utf8_lossy(&bytes);
+        Ok(first_readme_line(&text))
     }
 
     async fn push_file(
@@ -450,4 +521,38 @@ struct PushGitHubFileRequest {
     content: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     sha: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct UpdateGitHubRepositoryRequest {
+    description: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct GitHubReadmeContent {
+    #[serde(default)]
+    content: String,
+}
+
+fn first_readme_line(markdown: &str) -> Option<String> {
+    for line in markdown.lines() {
+        let mut s = line.trim();
+        if s.is_empty() {
+            continue;
+        }
+        loop {
+            let trimmed = s.trim_start_matches(|c: char| {
+                c == '#' || c == '>' || c == '-' || c == '*' || c == ' '
+            });
+            if trimmed == s {
+                break;
+            }
+            s = trimmed;
+        }
+        let cleaned = s.trim().trim_matches('`');
+        if !cleaned.is_empty() {
+            return Some(cleaned.to_string());
+        }
+    }
+    None
 }

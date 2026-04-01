@@ -167,6 +167,33 @@ impl Provider for GitLabProvider {
         })
     }
 
+    async fn update_description(
+        &self,
+        organization: &str,
+        repository: &str,
+        description: &str,
+    ) -> Result<()> {
+        let project_path = url_encode_project_path(organization, repository);
+        let endpoint = self.url(&format!("/projects/{project_path}"));
+
+        self.client
+            .put(&endpoint)
+            .json(&UpdateGitLabProjectRequest {
+                description: description.to_string(),
+            })
+            .send()
+            .await
+            .with_context(|| {
+                format!("failed to update description for '{organization}/{repository}'")
+            })?
+            .error_for_status()
+            .with_context(|| {
+                format!("GitLab update project API returned an error for '{repository}'")
+            })?;
+
+        Ok(())
+    }
+
     async fn align_topics(
         &self,
         organization: &str,
@@ -427,6 +454,11 @@ struct CreateGitLabProjectRequest {
 #[derive(Debug, Serialize)]
 struct UpdateGitLabTopics {
     topics: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct UpdateGitLabProjectRequest {
+    description: String,
 }
 
 #[derive(Debug, Serialize)]

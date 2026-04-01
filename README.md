@@ -80,11 +80,13 @@ After `make setup` the `devopster` binary is on your `$PATH` and these commands 
 | `devopster repo list` | List all repositories in the configured organization |
 | `devopster repo list --topic rust` | Filter repositories by topic |
 | `devopster repo audit` | Audit repos for missing description, topics, license, and default branch |
+| `devopster repo fix` | Prompt for missing description, topics, and license in scoped repos |
 | `devopster repo scaffold --name <name> --template <template>` | Create a new repository from a template defined in config |
 | `devopster repo sync` | Push files from `.github/` to all repositories |
 | `devopster catalog generate` | Export a JSON catalog of all repositories |
 | `devopster topics align` | Add missing template topics to every matching repository |
 | `devopster stats` | Print org summary: config, coverage (description/topics/license/branch), compliance, and top topics |
+| `devopster stats --scope-missing` | Update scoped repos to the non-compliant list |
 
 ### Quick start inside the container
 
