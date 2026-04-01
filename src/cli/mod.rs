@@ -23,13 +23,18 @@ Usage: devopster [OPTIONS] <COMMAND>
 Commands:
 {tab}+-------------------+---------------------------------------------------+
 {tab}| login             | Authenticate with a provider via browser sign-in  |
+{tab}+-------------------+---------------------------------------------------+
 {tab}| init              | Create devopster-config.yaml and sign in          |
+{tab}+-------------------+---------------------------------------------------+
 {tab}| repo list         | List repositories (optionally filter by topic)    |
 {tab}| repo audit        | Audit repos against the configured policy         |
 {tab}| repo scaffold     | Create a new repository from a template           |
 {tab}| repo sync         | Push files from .github/ to all repositories      |
+{tab}+-------------------+---------------------------------------------------+
 {tab}| catalog generate  | Export a catalog.json of all repositories         |
+{tab}+-------------------+---------------------------------------------------+
 {tab}| topics align      | Add missing template topics to repositories       |
+{tab}+-------------------+---------------------------------------------------+
 {tab}| stats             | Print org-wide metadata coverage and compliance   |
 {tab}+-------------------+---------------------------------------------------+
 
