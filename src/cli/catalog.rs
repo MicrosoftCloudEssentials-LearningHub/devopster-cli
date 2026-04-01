@@ -13,6 +13,7 @@ pub struct CatalogCommand {
 
 #[derive(Debug, Subcommand)]
 pub enum CatalogAction {
+    /// Export a catalog.json of all repositories (compatible with org-catalog GitHub Pages)
     Generate(GenerateCatalogCommand),
 }
 

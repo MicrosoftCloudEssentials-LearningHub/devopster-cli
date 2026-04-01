@@ -13,6 +13,7 @@ pub struct TopicsCommand {
 
 #[derive(Debug, Subcommand)]
 pub enum TopicsAction {
+    /// Add any missing template topics to every matching repository
     Align(AlignTopicsCommand),
 }
 

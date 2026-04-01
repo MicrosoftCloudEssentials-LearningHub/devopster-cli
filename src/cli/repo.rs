@@ -14,9 +14,13 @@ pub struct RepoCommand {
 
 #[derive(Debug, Subcommand)]
 pub enum RepoAction {
+    /// List all repositories; use --topic to filter
     List(ListReposCommand),
+    /// Audit repositories against the policy defined in devopster-config.yaml
     Audit(AuditReposCommand),
+    /// Push files from a local directory to all matching repositories
     Sync(SyncReposCommand),
+    /// Create a new repository from a named template
     Scaffold(ScaffoldRepoCommand),
 }
 

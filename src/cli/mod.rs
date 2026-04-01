@@ -12,8 +12,30 @@ use clap::{Parser, Subcommand};
 #[command(
     name = "devopster",
     version,
-    about = "Cross-platform GitOps CLI for managing organization repositories",
-    long_about = "Manage GitHub, Azure DevOps, and GitLab organizations with a single containerized Rust CLI."
+    about = "GitOps CLI for GitHub, Azure DevOps, and GitLab",
+    long_about = None,
+    help_template = "\
+{before-help}devopster {version}
+{about}
+
+Usage: devopster [OPTIONS] <COMMAND>
+
+Commands:
+{tab}+-------------------+---------------------------------------------------+
+{tab}| login             | Authenticate with a provider via browser sign-in  |
+{tab}| init              | Create devopster-config.yaml and sign in          |
+{tab}| repo list         | List repositories (optionally filter by topic)    |
+{tab}| repo audit        | Audit repos against the configured policy         |
+{tab}| repo scaffold     | Create a new repository from a template           |
+{tab}| repo sync         | Push files from .github/ to all repositories      |
+{tab}| catalog generate  | Export a catalog.json of all repositories         |
+{tab}| topics align      | Add missing template topics to repositories       |
+{tab}| stats             | Print org-wide metadata coverage and compliance   |
+{tab}+-------------------+---------------------------------------------------+
+
+Options:
+{options}
+{after-help}"
 )]
 pub struct Cli {
     #[arg(
@@ -33,10 +55,15 @@ pub struct Cli {
 pub enum Commands {
     /// Authenticate with a provider via browser sign-in
     Login(login::LoginCommand),
+    /// Create devopster-config.yaml interactively and optionally sign in
     Init(init::InitCommand),
+    /// List, audit, scaffold, and sync repositories
     Repo(repo::RepoCommand),
+    /// Generate a machine-readable org catalog (catalog.json)
     Catalog(catalog::CatalogCommand),
+    /// Add missing template topics to every matching repository
     Topics(topics::TopicsCommand),
+    /// Print org-wide metadata coverage, compliance, and top topics
     Stats(stats::StatsCommand),
 }
 
