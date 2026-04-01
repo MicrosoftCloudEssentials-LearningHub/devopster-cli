@@ -21,27 +21,30 @@ use clap::{Parser, Subcommand};
 Usage: devopster [OPTIONS] <COMMAND>
 
 Commands:
-{tab}+------------------------+---------------------------------------------------+
-{tab}| login github           | Sign in to GitHub via browser (gh CLI)            |
-{tab}| login azure-devops     | Sign in to Azure DevOps via browser (az CLI)      |
-{tab}| login gitlab           | Sign in to GitLab via browser (glab CLI)          |
-{tab}| login all              | Sign in to all three providers sequentially       |
-{tab}| login status           | Show authentication status for all providers      |
-{tab}| login logout <provider>| Remove stored credentials for a provider          |
-{tab}+------------------------+---------------------------------------------------+
-{tab}| init                   | Create devopster-config.yaml and sign in          |
-{tab}+------------------------+---------------------------------------------------+
-{tab}| repo list              | List repositories (optionally filter by topic)    |
-{tab}| repo audit             | Audit repos against the configured policy         |
-{tab}| repo scaffold          | Create a new repository from a template           |
-{tab}| repo sync              | Push files from .github/ to all repositories      |
-{tab}+------------------------+---------------------------------------------------+
-{tab}| catalog generate       | Export a catalog.json of all repositories         |
-{tab}+------------------------+---------------------------------------------------+
-{tab}| topics align           | Add missing template topics to repositories       |
-{tab}+------------------------+---------------------------------------------------+
-{tab}| stats                  | Print org-wide metadata coverage and compliance   |
-{tab}+------------------------+---------------------------------------------------+
+{tab}+-----------------------------------------------+---------------------------------------------------+
+{tab}| devopster login github                        | Sign in to GitHub via browser (gh CLI)            |
+{tab}| devopster login azure-devops                  | Sign in to Azure DevOps via browser (az CLI)      |
+{tab}| devopster login gitlab                        | Sign in to GitLab via browser (glab CLI)          |
+{tab}| devopster login all                           | Sign in to all three providers sequentially       |
+{tab}| devopster login status                        | Show authentication status for all providers      |
+{tab}| devopster login logout <provider>             | Remove stored credentials for a provider          |
+{tab}+-----------------------------------------------+---------------------------------------------------+
+{tab}| devopster init                                | Create devopster-config.yaml and sign in          |
+{tab}| devopster init --no-login                     | Create devopster-config.yaml, skip sign-in        |
+{tab}+-----------------------------------------------+---------------------------------------------------+
+{tab}| devopster repo list                           | List repositories in the configured organization  |
+{tab}| devopster repo list --topic <topic>           | Filter repositories by topic                      |
+{tab}| devopster repo audit                          | Audit repos against the configured policy         |
+{tab}| devopster repo scaffold --name <n> --template <t> | Create a new repository from a template      |
+{tab}| devopster repo sync                           | Push files from .github/ to all repositories      |
+{tab}+-----------------------------------------------+---------------------------------------------------+
+{tab}| devopster catalog generate                    | Export a catalog.json of all repositories         |
+{tab}+-----------------------------------------------+---------------------------------------------------+
+{tab}| devopster topics align                        | Add missing template topics to repositories       |
+{tab}+-----------------------------------------------+---------------------------------------------------+
+{tab}| devopster stats                               | Print org-wide metadata coverage and compliance   |
+{tab}| devopster stats --scope-missing               | Also write non-compliant repos to scoped_repos    |
+{tab}+-----------------------------------------------+---------------------------------------------------+
 
 Options:
 {options}
