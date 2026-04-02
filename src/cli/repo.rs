@@ -79,14 +79,13 @@ pub struct BlueprintRepoCommand {
     pub private: bool,
 }
 
-const ORG_LOCATION_PLACEHOLDER: &str = "City, Country";
+const ORG_DEFAULT_LOCATION: &str = "Atlanta, USA";
 const ORG_GITHUB_BADGE_LINE: &str = "[![GitHub](https://img.shields.io/badge/--181717?logo=github&logoColor=ffffff)](https://github.com/)";
 const ORG_PROFILE_LINE: &str = "[brown9804](https://github.com/brown9804)";
-const ORG_LAST_UPDATED_PLACEHOLDER: &str = "Last updated: YYYY-MM-DD";
 const ORG_SEPARATOR_LINE: &str = "----------";
 const ORG_BADGE_START_MARKER: &str = "<!-- START BADGE -->";
 const ORG_BADGE_END_MARKER: &str = "<!-- END BADGE -->";
-const ORG_BADGE_BLOCK: &str = "<!-- START BADGE -->\n<div align=\"center\">\n  <img src=\"https://img.shields.io/badge/Total%20views-0-limegreen\" alt=\"Total views\">\n  <p>Refresh Date: YYYY-MM-DD</p>\n</div>\n<!-- END BADGE -->";
+const ORG_TOTAL_VIEWS_BADGE_FALLBACK: &str = "https://img.shields.io/badge/Total%20views-0-limegreen";
 
 impl RepoCommand {
     pub async fn run(&self, config_path: &str) -> Result<()> {
@@ -505,10 +504,15 @@ async fn sync_blueprint_requirements(
                 "  Update README with the org header and badge markers?",
                 true,
             )? {
+                let repair_values = resolve_readme_repair_values(
+                    current_readme.as_deref(),
+                    missing_readme,
+                )?;
                 let updated_readme = apply_org_readme_standard(
                     &repo.name,
                     current_readme.as_deref(),
                     missing_readme,
+                    &repair_values,
                 );
                 match provider
                     .push_file(
@@ -586,6 +590,13 @@ impl MissingReadmeParts {
     }
 }
 
+#[derive(Debug, Clone)]
+struct ReadmeRepairValues {
+    location_line: String,
+    last_updated_line: String,
+    badge_block: String,
+}
+
 fn detect_missing_readme_parts(readme: Option<&str>) -> MissingReadmeParts {
     let text = readme.unwrap_or("");
 
@@ -595,15 +606,47 @@ fn detect_missing_readme_parts(readme: Option<&str>) -> MissingReadmeParts {
         profile: !text.contains(ORG_PROFILE_LINE),
         last_updated: !text.lines().any(is_last_updated_line),
         separator: !text.lines().any(|line| line.trim() == ORG_SEPARATOR_LINE),
-        badge_block: !(text.contains(ORG_BADGE_START_MARKER)
-            && text.contains(ORG_BADGE_END_MARKER)),
+        badge_block: !has_complete_badge_block(text),
     }
+}
+
+fn resolve_readme_repair_values(
+    readme: Option<&str>,
+    missing: MissingReadmeParts,
+) -> Result<ReadmeRepairValues> {
+    let existing_location = find_location_line(readme).unwrap_or_else(|| ORG_DEFAULT_LOCATION.to_string());
+    let location_line = if missing.location {
+        let input = prompt_line(&format!(
+            "  Location [default: {existing_location}]: "
+        ))?;
+        if input.trim().is_empty() {
+            existing_location
+        } else {
+            input.trim().to_string()
+        }
+    } else {
+        existing_location
+    };
+
+    let last_updated_value = find_last_updated_value(readme)
+        .unwrap_or_else(today_iso_date);
+    let total_views_badge = find_total_views_badge_url(readme)
+        .unwrap_or_else(|| ORG_TOTAL_VIEWS_BADGE_FALLBACK.to_string());
+    let refresh_date = find_refresh_date_value(readme)
+        .unwrap_or_else(today_iso_date);
+
+    Ok(ReadmeRepairValues {
+        location_line,
+        last_updated_line: format!("Last updated: {last_updated_value}"),
+        badge_block: build_badge_block(&total_views_badge, &refresh_date),
+    })
 }
 
 fn apply_org_readme_standard(
     repo_name: &str,
     readme: Option<&str>,
     missing: MissingReadmeParts,
+    values: &ReadmeRepairValues,
 ) -> String {
     let existing = readme.unwrap_or("").trim_end();
     let mut content = if existing.is_empty() {
@@ -612,17 +655,13 @@ fn apply_org_readme_standard(
         existing.to_string()
     };
 
-    let header_additions = build_org_header_additions(missing);
+    let header_additions = build_org_header_additions(missing, values);
     if !header_additions.is_empty() {
         content = insert_after_main_title(&content, &header_additions, repo_name);
     }
 
     if missing.badge_block {
-        if !content.ends_with('\n') {
-            content.push('\n');
-        }
-        content.push('\n');
-        content.push_str(ORG_BADGE_BLOCK);
+        content = upsert_badge_block(&content, &values.badge_block);
     }
 
     if !content.ends_with('\n') {
@@ -632,10 +671,13 @@ fn apply_org_readme_standard(
     content
 }
 
-fn build_org_header_additions(missing: MissingReadmeParts) -> String {
+fn build_org_header_additions(
+    missing: MissingReadmeParts,
+    values: &ReadmeRepairValues,
+) -> String {
     let mut sections = Vec::new();
     if missing.location {
-        sections.push(ORG_LOCATION_PLACEHOLDER.to_string());
+        sections.push(values.location_line.clone());
     }
     if missing.github_badge {
         sections.push(ORG_GITHUB_BADGE_LINE.to_string());
@@ -644,12 +686,133 @@ fn build_org_header_additions(missing: MissingReadmeParts) -> String {
         sections.push(ORG_PROFILE_LINE.to_string());
     }
     if missing.last_updated {
-        sections.push(ORG_LAST_UPDATED_PLACEHOLDER.to_string());
+        sections.push(values.last_updated_line.clone());
     }
     if missing.separator {
         sections.push(ORG_SEPARATOR_LINE.to_string());
     }
     sections.join("\n\n")
+}
+
+fn upsert_badge_block(markdown: &str, badge_block: &str) -> String {
+    let mut content = markdown.trim_end().to_string();
+    let start = content.find(ORG_BADGE_START_MARKER);
+    let end = content.find(ORG_BADGE_END_MARKER);
+
+    match (start, end) {
+        (Some(start_index), Some(end_index)) if end_index >= start_index => {
+            let end_index = end_index + ORG_BADGE_END_MARKER.len();
+            content.replace_range(start_index..end_index, badge_block);
+            content
+        }
+        (Some(start_index), None) => {
+            content.truncate(start_index);
+            if !content.ends_with('\n') && !content.is_empty() {
+                content.push('\n');
+            }
+            if !content.ends_with("\n\n") && !content.is_empty() {
+                content.push('\n');
+            }
+            content.push_str(badge_block);
+            content
+        }
+        _ => {
+            if !content.is_empty() && !content.ends_with('\n') {
+                content.push('\n');
+            }
+            if !content.ends_with("\n\n") && !content.is_empty() {
+                content.push('\n');
+            }
+            content.push_str(badge_block);
+            content
+        }
+    }
+}
+
+fn build_badge_block(total_views_badge_url: &str, refresh_date: &str) -> String {
+    format!(
+        "{ORG_BADGE_START_MARKER}\n<div align=\"center\">\n  <img src=\"{total_views_badge_url}\" alt=\"Total views\">\n  <p>Refresh Date: {refresh_date}</p>\n</div>\n{ORG_BADGE_END_MARKER}"
+    )
+}
+
+fn has_complete_badge_block(markdown: &str) -> bool {
+    let Some(block) = extract_badge_block(markdown) else {
+        return false;
+    };
+
+    block.contains("img.shields.io/badge/Total%20views-")
+        && block.lines().any(is_refresh_date_line)
+}
+
+fn extract_badge_block(markdown: &str) -> Option<&str> {
+    let start = markdown.find(ORG_BADGE_START_MARKER)?;
+    let end = markdown.find(ORG_BADGE_END_MARKER)? + ORG_BADGE_END_MARKER.len();
+    (end >= start).then_some(&markdown[start..end])
+}
+
+fn find_location_line(readme: Option<&str>) -> Option<String> {
+    readme?
+        .lines()
+        .find(|line| is_org_location_line(line))
+        .map(|line| line.trim().to_string())
+}
+
+fn find_last_updated_value(readme: Option<&str>) -> Option<String> {
+    readme?
+        .lines()
+        .find_map(|line| {
+            let value = line.trim().strip_prefix("Last updated: ")?;
+            is_iso_date(value).then(|| value.to_string())
+        })
+}
+
+fn find_refresh_date_value(readme: Option<&str>) -> Option<String> {
+    readme?
+        .lines()
+        .find_map(|line| {
+            let value = line
+                .trim()
+                .strip_prefix("<p>Refresh Date: ")?
+                .strip_suffix("</p>")?;
+            is_iso_date(value).then(|| value.to_string())
+        })
+}
+
+fn find_total_views_badge_url(readme: Option<&str>) -> Option<String> {
+    readme?.lines().find_map(|line| {
+        let start = line.find("https://img.shields.io/badge/Total%20views-")?;
+        let rest = &line[start..];
+        let end = rest.find('"').or_else(|| rest.find(')')).unwrap_or(rest.len());
+        Some(rest[..end].to_string())
+    })
+}
+
+fn today_iso_date() -> String {
+    let unix_days = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_secs() / 86_400)
+        .unwrap_or(0);
+
+    iso_date_from_unix_days(unix_days as i64)
+}
+
+fn iso_date_from_unix_days(unix_days: i64) -> String {
+    let z = unix_days + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let day_of_era = z - era * 146_097;
+    let year_of_era =
+        (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
+    let mut year = year_of_era + era * 400;
+    let day_of_year =
+        day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
+    let month_param = (5 * day_of_year + 2) / 153;
+    let day = day_of_year - (153 * month_param + 2) / 5 + 1;
+    let month = month_param + if month_param < 10 { 3 } else { -9 };
+    if month <= 2 {
+        year += 1;
+    }
+
+    format!("{year:04}-{month:02}-{day:02}")
 }
 
 fn insert_after_main_title(markdown: &str, additions: &str, repo_name: &str) -> String {
@@ -709,7 +872,18 @@ fn is_last_updated_line(line: &str) -> bool {
         return false;
     };
 
-    value == "YYYY-MM-DD" || is_iso_date(value)
+    is_iso_date(value)
+}
+
+fn is_refresh_date_line(line: &str) -> bool {
+    let Some(value) = line.trim().strip_prefix("<p>Refresh Date: ") else {
+        return false;
+    };
+    let Some(value) = value.strip_suffix("</p>") else {
+        return false;
+    };
+
+    is_iso_date(value)
 }
 
 fn is_iso_date(value: &str) -> bool {
@@ -1194,7 +1368,11 @@ mod tests {
     #[test]
     fn detect_missing_readme_parts_accepts_org_standard_lines() {
         let readme = format!(
-            "# demo\n\nAtlanta, USA\n\n{ORG_GITHUB_BADGE_LINE}\n{ORG_PROFILE_LINE}\n\nLast updated: 2026-04-02\n\n{ORG_SEPARATOR_LINE}\n\nBody\n\n{ORG_BADGE_BLOCK}\n"
+            "# demo\n\nAtlanta, USA\n\n{ORG_GITHUB_BADGE_LINE}\n{ORG_PROFILE_LINE}\n\nLast updated: 2026-04-02\n\n{ORG_SEPARATOR_LINE}\n\nBody\n\n{}\n",
+            build_badge_block(
+                "https://img.shields.io/badge/Total%20views-1580-limegreen",
+                "2026-04-02"
+            )
         );
 
         let missing = detect_missing_readme_parts(Some(&readme));
@@ -1205,18 +1383,62 @@ mod tests {
     #[test]
     fn apply_org_readme_standard_inserts_missing_markers() {
         let original = "# demo\n\n## About\nHello\n";
+        let values = ReadmeRepairValues {
+            location_line: "Atlanta, USA".to_string(),
+            last_updated_line: "Last updated: 2026-04-02".to_string(),
+            badge_block: build_badge_block(
+                "https://img.shields.io/badge/Total%20views-42-limegreen",
+                "2026-04-02"
+            ),
+        };
         let updated = apply_org_readme_standard(
             "demo",
             Some(original),
             detect_missing_readme_parts(Some(original)),
+            &values,
         );
 
-        assert!(updated.contains(ORG_LOCATION_PLACEHOLDER));
+        assert!(updated.contains("Atlanta, USA"));
         assert!(updated.contains(ORG_GITHUB_BADGE_LINE));
         assert!(updated.contains(ORG_PROFILE_LINE));
-        assert!(updated.contains(ORG_LAST_UPDATED_PLACEHOLDER));
+        assert!(updated.contains("Last updated: 2026-04-02"));
         assert!(updated.contains(ORG_SEPARATOR_LINE));
         assert!(updated.contains(ORG_BADGE_START_MARKER));
         assert!(updated.contains("## About\nHello"));
+    }
+
+    #[test]
+    fn detect_missing_readme_parts_flags_incomplete_badge_block() {
+        let readme = format!(
+            "# demo\n\nAtlanta, USA\n\n{ORG_GITHUB_BADGE_LINE}\n{ORG_PROFILE_LINE}\n\nLast updated: 2026-04-02\n\n{ORG_SEPARATOR_LINE}\n\n{ORG_BADGE_START_MARKER}\n<div align=\"center\">\n</div>\n{ORG_BADGE_END_MARKER}\n"
+        );
+
+        let missing = detect_missing_readme_parts(Some(&readme));
+
+        assert!(missing.badge_block);
+    }
+
+    #[test]
+    fn upsert_badge_block_replaces_existing_fragment() {
+        let original = format!(
+            "# demo\n\nBody\n\n{ORG_BADGE_START_MARKER}\nold\n{ORG_BADGE_END_MARKER}\n"
+        );
+        let updated = upsert_badge_block(
+            &original,
+            &build_badge_block(
+                "https://img.shields.io/badge/Total%20views-42-limegreen",
+                "2026-04-02"
+            ),
+        );
+
+        assert!(!updated.contains("\nold\n"));
+        assert!(updated.contains("Total%20views-42-limegreen"));
+        assert!(updated.contains("Refresh Date: 2026-04-02"));
+    }
+
+    #[test]
+    fn iso_date_from_unix_days_formats_epoch() {
+        assert_eq!(iso_date_from_unix_days(0), "1970-01-01");
+        assert_eq!(iso_date_from_unix_days(19_815), "2024-04-02");
     }
 }
