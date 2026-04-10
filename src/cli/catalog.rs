@@ -4,6 +4,7 @@ use serde::Serialize;
 
 use crate::config::AppConfig;
 use crate::provider::{ProviderFactory, RepoSummary};
+use crate::ui;
 
 #[derive(Debug, Args)]
 pub struct CatalogCommand {
@@ -102,9 +103,7 @@ impl CatalogCommand {
                 let json = serde_json::to_string_pretty(&catalog)
                     .map_err(|e| anyhow::anyhow!("failed to serialize catalog: {e}"))?;
 
-                if let Some(parent) =
-                    std::path::Path::new(&config.catalog.output_path).parent()
-                {
+                if let Some(parent) = std::path::Path::new(&config.catalog.output_path).parent() {
                     if !parent.as_os_str().is_empty() {
                         std::fs::create_dir_all(parent).map_err(|e| {
                             anyhow::anyhow!("failed to create output directory: {e}")
@@ -119,10 +118,10 @@ impl CatalogCommand {
                     )
                 })?;
 
-                println!(
+                ui::success(&format!(
                     "Catalog written to '{}': {count} repositories.",
                     config.catalog.output_path
-                );
+                ));
             }
         }
 

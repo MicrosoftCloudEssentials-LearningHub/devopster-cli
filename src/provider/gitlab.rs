@@ -148,15 +148,10 @@ impl Provider for GitLabProvider {
                 })
                 .send()
                 .await
-                .with_context(|| {
-                    format!("failed to set GitLab topics for '{}'", request.name)
-                })?
+                .with_context(|| format!("failed to set GitLab topics for '{}'", request.name))?
                 .error_for_status()
                 .with_context(|| {
-                    format!(
-                        "GitLab topics API returned an error for '{}'",
-                        request.name
-                    )
+                    format!("GitLab topics API returned an error for '{}'", request.name)
                 })?;
         }
 
@@ -212,9 +207,7 @@ impl Provider for GitLabProvider {
             .await
             .with_context(|| format!("failed to align GitLab topics for '{repository}'"))?
             .error_for_status()
-            .with_context(|| {
-                format!("GitLab topics API returned an error for '{repository}'")
-            })?;
+            .with_context(|| format!("GitLab topics API returned an error for '{repository}'"))?;
 
         Ok(())
     }
@@ -229,8 +222,9 @@ impl Provider for GitLabProvider {
     ) -> Result<()> {
         let project_path = url_encode_project_path(organization, repository);
         let file_path = url_encode_file_path(path);
-        let check_url =
-            self.url(&format!("/projects/{project_path}/repository/files/{file_path}?ref=main"));
+        let check_url = self.url(&format!(
+            "/projects/{project_path}/repository/files/{file_path}?ref=main"
+        ));
 
         let exists = self
             .client
@@ -299,19 +293,12 @@ impl GitLabProvider {
                 "/groups/{encoded_group}/projects?per_page=100&page={page}&include_subgroups=false"
             ));
 
-            let response = self
-                .client
-                .get(&endpoint)
-                .send()
-                .await
-                .with_context(|| {
-                    format!("failed to call GitLab projects API for group '{organization}'")
-                })?;
+            let response = self.client.get(&endpoint).send().await.with_context(|| {
+                format!("failed to call GitLab projects API for group '{organization}'")
+            })?;
 
             if response.status() == reqwest::StatusCode::NOT_FOUND {
-                anyhow::bail!(
-                    "GitLab group '{organization}' was not found or is not visible"
-                );
+                anyhow::bail!("GitLab group '{organization}' was not found or is not visible");
             }
 
             let response = response.error_for_status().with_context(|| {
@@ -347,8 +334,7 @@ fn build_client(config: &GitLabConfig) -> Result<Client> {
     if let Ok(token) = env::var(&config.token_env) {
         headers.insert(
             "PRIVATE-TOKEN",
-            header::HeaderValue::from_str(&token)
-                .context("invalid GitLab token header value")?,
+            header::HeaderValue::from_str(&token).context("invalid GitLab token header value")?,
         );
     } else if let Some(stored) = auth::load_token("gitlab").ok().flatten() {
         let auth = format!("Bearer {}", stored.access_token);

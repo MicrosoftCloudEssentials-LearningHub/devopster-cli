@@ -68,20 +68,45 @@ Last updated: 2026-03-25
 make setup
 
 # Inside the container:
-devopster init
-devopster repo list
+devopster
 ```
 
 > To reopen the container shell after exiting, run `make setup` again or `make container-run`.
 
 ## Commands Overview
 
-> After `make setup` the `devopster` binary is on your `$PATH` and these commands work directly:
+> After `make setup`, run `devopster` with no subcommand to open the interactive launcher. For most users, the only top-level commands you need to remember are `login` and `init`.
+
+### Interactive launcher
+
+```bash
+devopster
+```
+
+The launcher lets you choose actions with the keyboard for:
+
+- init
+- login
+- repo actions
+- catalog generation
+- topic alignment
+- stats
+
+### Primary direct commands
+
+These are the two direct commands most people need:
 
 | Command | Options / Variants | Purpose |
 |---|---|---|
 | `devopster init` | - `--no-login` | - Create `devopster-config.yaml` and sign in to a provider<br/>- Create `devopster-config.yaml` only, skip the sign-in prompt |
 | `devopster login` | - `<github\|azure-devops\|gitlab>`<br/>- `all`<br/>- `status`<br/>- `logout <provider>` | - Sign in to that provider via browser (uses `gh`, `az`, or `glab` CLI)<br/>- Sign in to all three providers sequentially<br/>- Show authentication status for all providers<br/>- Remove stored credentials for a provider |
+
+### Advanced direct commands
+
+These commands still work directly when you want explicit CLI usage or scripting:
+
+| Command | Options / Variants | Purpose |
+|---|---|---|
 | `devopster repo list` | - `--topic <topic>` | - List all repositories in the configured organization<br/>- Filter repositories by topic |
 | `devopster repo audit` | N/A | - Audit repos for missing description, topics, license, and default branch |
 | `devopster repo fix` | N/A | - Prompt for missing description, topics, and license in scoped repos that actually need fixes |
@@ -97,10 +122,10 @@ devopster repo list
 # 1. build the image and install devopster
 make setup
 
-# 2. init: creates devopster-config.yaml and asks which provider to sign in to
-devopster init
+# 2. open the launcher
+devopster
 
-# 3. run any command
+# 3. or run any command directly
 devopster repo list
 devopster repo audit
 devopster repo blueprint --name sample-repo --template azure-overview

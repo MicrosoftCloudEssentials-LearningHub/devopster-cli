@@ -4,6 +4,7 @@ use std::collections::HashSet;
 
 use crate::config::AppConfig;
 use crate::provider::ProviderFactory;
+use crate::ui;
 
 #[derive(Debug, Args)]
 pub struct TopicsCommand {
@@ -28,7 +29,7 @@ impl TopicsCommand {
         match &self.action {
             TopicsAction::Align(_) => {
                 if config.templates.is_empty() {
-                    println!("No templates configured — nothing to align.");
+                    ui::warn("No templates configured; nothing to align.");
                     return Ok(());
                 }
 
@@ -69,17 +70,14 @@ impl TopicsCommand {
                             .align_topics(&config.organization, &repo.name, &merged)
                             .await?;
 
-                        println!(
-                            "Updated '{}': added {:?}",
-                            repo.name, missing
-                        );
+                        ui::item(&format!("Updated '{}': added {:?}", repo.name, missing));
                         updated += 1;
                     }
                 }
 
-                println!(
+                ui::success(&format!(
                     "Topic alignment complete: {updated} updated, {already_aligned} already aligned."
-                );
+                ));
             }
         }
 

@@ -84,8 +84,9 @@ impl Provider for GitHubProvider {
                     findings.push(AuditFinding {
                         repository: repository.name.clone(),
                         code: "missing-license",
-                        message: "Repository license is missing or not detectable from GitHub metadata."
-                            .to_string(),
+                        message:
+                            "Repository license is missing or not detectable from GitHub metadata."
+                                .to_string(),
                     });
                 }
             }
@@ -138,11 +139,17 @@ impl Provider for GitHubProvider {
             .with_context(|| format!("failed to create GitHub repository '{}'", request.name))?;
 
         let response = response.error_for_status().with_context(|| {
-            format!("GitHub create repository API returned an error for '{}'", request.name)
+            format!(
+                "GitHub create repository API returned an error for '{}'",
+                request.name
+            )
         })?;
 
         let repository: GitHubRepository = response.json().await.with_context(|| {
-            format!("failed to decode GitHub create repository response for '{}'", request.name)
+            format!(
+                "failed to decode GitHub create repository response for '{}'",
+                request.name
+            )
         })?;
 
         if !request.template.topics.is_empty() {
@@ -164,7 +171,9 @@ impl Provider for GitHubProvider {
                 .await
                 .with_context(|| format!("failed to set GitHub topics for '{}'", request.name))?
                 .error_for_status()
-                .with_context(|| format!("GitHub topics API returned an error for '{}'", request.name))?;
+                .with_context(|| {
+                    format!("GitHub topics API returned an error for '{}'", request.name)
+                })?;
         }
 
         // Push README with template-specific content
@@ -182,8 +191,7 @@ impl Provider for GitHubProvider {
         .await?;
 
         // Push default CODEOWNERS
-        let codeowners_content =
-            format!("# Code owners for this repository.\n* @{organization}\n");
+        let codeowners_content = format!("# Code owners for this repository.\n* @{organization}\n");
         self.push_file(
             organization,
             &request.name,
@@ -240,9 +248,7 @@ impl Provider for GitHubProvider {
         let endpoint = self
             .api_url
             .join(&format!("/repos/{organization}/{repository}/topics"))
-            .with_context(|| {
-                format!("failed to build GitHub topics URL for '{repository}'")
-            })?;
+            .with_context(|| format!("failed to build GitHub topics URL for '{repository}'"))?;
 
         self.client
             .put(endpoint)
@@ -253,9 +259,7 @@ impl Provider for GitHubProvider {
             .await
             .with_context(|| format!("failed to align topics for '{repository}'"))?
             .error_for_status()
-            .with_context(|| {
-                format!("GitHub topics API returned an error for '{repository}'")
-            })?;
+            .with_context(|| format!("GitHub topics API returned an error for '{repository}'"))?;
 
         Ok(())
     }
@@ -272,21 +276,23 @@ impl Provider for GitHubProvider {
                 format!("failed to build GitHub README URL for '{organization}/{repository}'")
             })?;
 
-        let response = self.client.get(endpoint).send().await.with_context(|| {
-            format!("failed to fetch README for '{organization}/{repository}'")
-        })?;
+        let response =
+            self.client.get(endpoint).send().await.with_context(|| {
+                format!("failed to fetch README for '{organization}/{repository}'")
+            })?;
 
         if response.status() == StatusCode::NOT_FOUND {
             return Ok(None);
         }
 
-        let response = response.error_for_status().with_context(|| {
-            format!("GitHub README API returned an error for '{repository}'")
-        })?;
+        let response = response
+            .error_for_status()
+            .with_context(|| format!("GitHub README API returned an error for '{repository}'"))?;
 
-        let readme: GitHubReadmeContent = response.json().await.with_context(|| {
-            format!("failed to decode README response for '{repository}'")
-        })?;
+        let readme: GitHubReadmeContent = response
+            .json()
+            .await
+            .with_context(|| format!("failed to decode README response for '{repository}'"))?;
 
         if readme.content.trim().is_empty() {
             return Ok(None);
@@ -361,9 +367,7 @@ impl Provider for GitHubProvider {
             .join(&format!(
                 "/repos/{organization}/{repository}/contents/{path}"
             ))
-            .with_context(|| {
-                format!("failed to build GitHub contents URL for '{path}'")
-            })?;
+            .with_context(|| format!("failed to build GitHub contents URL for '{path}'"))?;
 
         // Fetch current SHA if the file exists (required for updates)
         let existing_sha: Option<String> = {
@@ -372,9 +376,7 @@ impl Provider for GitHubProvider {
                 .get(endpoint.clone())
                 .send()
                 .await
-                .with_context(|| {
-                    format!("failed to check file '{path}' in '{repository}'")
-                })?;
+                .with_context(|| format!("failed to check file '{path}' in '{repository}'"))?;
             if response.status().is_success() {
                 let meta: GitHubFileContent = response.json().await.with_context(|| {
                     format!("failed to decode file metadata for '{path}' in '{repository}'")
@@ -386,21 +388,22 @@ impl Provider for GitHubProvider {
         };
 
         let content_b64 = base64::engine::general_purpose::STANDARD.encode(content);
+        let identity = auth::load_github_identity().ok().flatten();
         self.client
             .put(endpoint)
             .json(&PushGitHubFileRequest {
                 message: commit_message.to_string(),
                 content: content_b64,
                 sha: existing_sha,
+                author: identity.as_ref().map(GitHubCommitIdentity::from),
+                committer: identity.as_ref().map(GitHubCommitIdentity::from),
             })
             .send()
             .await
             .with_context(|| format!("failed to push file '{path}' to '{repository}'"))?
             .error_for_status()
             .with_context(|| {
-                format!(
-                    "GitHub contents API returned an error for '{path}' in '{repository}'"
-                )
+                format!("GitHub contents API returned an error for '{path}' in '{repository}'")
             })?;
 
         Ok(())
@@ -430,7 +433,9 @@ impl GitHubProvider {
             })?;
 
             if response.status() == StatusCode::NOT_FOUND {
-                anyhow::bail!("GitHub organization '{organization}' was not found or is not visible")
+                anyhow::bail!(
+                    "GitHub organization '{organization}' was not found or is not visible"
+                )
             }
 
             let response = response.error_for_status().with_context(|| {
@@ -469,9 +474,10 @@ impl GitHubProvider {
             })?;
         endpoint.query_pairs_mut().append_pair("ref", branch);
 
-        let response = self.client.get(endpoint).send().await.with_context(|| {
-            format!("failed to fetch file '{path}' in '{owner}/{repository}'")
-        })?;
+        let response =
+            self.client.get(endpoint).send().await.with_context(|| {
+                format!("failed to fetch file '{path}' in '{owner}/{repository}'")
+            })?;
 
         if response.status() == StatusCode::NOT_FOUND {
             return Ok(None);
@@ -632,6 +638,25 @@ struct PushGitHubFileRequest {
     content: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     sha: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    author: Option<GitHubCommitIdentity>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    committer: Option<GitHubCommitIdentity>,
+}
+
+#[derive(Debug, Serialize)]
+struct GitHubCommitIdentity {
+    name: String,
+    email: String,
+}
+
+impl From<&auth::GitHubIdentity> for GitHubCommitIdentity {
+    fn from(value: &auth::GitHubIdentity) -> Self {
+        Self {
+            name: value.name.clone(),
+            email: value.email.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -681,7 +706,7 @@ fn normalize_paths(paths: &[String]) -> Vec<String> {
 }
 
 fn matches_any_path(path: &str, roots: &[String]) -> bool {
-    roots.iter().any(|root| {
-        path == root || path.starts_with(&format!("{root}/"))
-    })
+    roots
+        .iter()
+        .any(|root| path == root || path.starts_with(&format!("{root}/")))
 }

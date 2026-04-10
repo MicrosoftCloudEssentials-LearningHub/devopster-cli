@@ -1,10 +1,12 @@
-use std::io::{self, Write};
 use std::path::Path;
 
 use anyhow::{bail, Context, Result};
 use clap::Args;
 
-use crate::cli::login::{login_azure_devops, login_github, login_gitlab};
+use crate::cli::login::{
+    login_azure_devops, login_github, login_gitlab, refresh_cached_github_identity,
+};
+use crate::ui;
 
 #[derive(Debug, Args)]
 pub struct InitCommand {
@@ -24,54 +26,51 @@ impl InitCommand {
             &self.output
         };
 
-        println!("Welcome to devopster. Let's set up your configuration.");
-        println!();
+        ui::header("devopster setup");
+        ui::info("Let’s set up your configuration.");
 
-        // ── Step 1: Pick provider ─────────────────────────────────────────────
-        println!("Which provider would you like to configure?");
-        println!("  1) GitHub");
-        println!("  2) Azure DevOps");
-        println!("  3) GitLab");
-        print!("Choice [1]: ");
-        io::stdout().flush().ok();
-
-        let mut choice = String::new();
-        io::stdin().read_line(&mut choice).context("failed to read provider choice")?;
-
-        let provider = match choice.trim() {
-            "2" | "azure" | "azure-devops" | "azure_devops" => "azure_devops",
-            "3" | "gitlab" => "gitlab",
+        ui::section("Pick a provider");
+        let provider_options = vec![
+            "GitHub".to_string(),
+            "Azure DevOps".to_string(),
+            "GitLab".to_string(),
+        ];
+        let provider = match ui::select("Provider", &provider_options, 0)? {
+            1 => "azure_devops",
+            2 => "gitlab",
             _ => "github",
         };
-
-        println!();
 
         // ── Step 2: Sign in ───────────────────────────────────────────────────
         if !self.no_login {
             let already_ok = is_authenticated(provider).await;
             if !already_ok {
-                println!("Signing in to {}...", provider_display(provider));
+                ui::info(&format!("Signing in to {}...", provider_display(provider)));
                 match provider {
                     "github" => login_github()?,
                     "azure_devops" => login_azure_devops()?,
                     "gitlab" => login_gitlab()?,
                     _ => {}
                 }
-                println!();
             } else {
-                println!("Already signed in to {}.", provider_display(provider));
-                println!();
+                ui::success(&format!(
+                    "Already signed in to {}.",
+                    provider_display(provider)
+                ));
+                if provider == "github" {
+                    let _ = refresh_cached_github_identity();
+                }
             }
         }
 
         // ── Step 3: Pick org / namespace ──────────────────────────────────────
+        ui::section("Choose organization");
         let (org, project, api_url) = pick_org(provider).await?;
-        println!("  Using: {org}");
-        println!();
+        ui::success(&format!("Using {}.", org));
 
         // ── Step 4: Pick repositories to target ──────────────────────────────
+        ui::section("Choose repository scope");
         let scoped_repos = pick_repos(provider, &org, project.as_deref(), &api_url).await;
-        println!();
 
         // ── Step 5: Copilot (GitHub only) ─────────────────────────────────────
         let copilot_enabled = if provider == "github" {
@@ -79,7 +78,6 @@ impl InitCommand {
         } else {
             false
         };
-        println!();
 
         // ── Step 6: Write config ──────────────────────────────────────────────
         let yaml = build_config_yaml(
@@ -94,45 +92,47 @@ impl InitCommand {
         if Path::new(destination).exists() {
             let existing = std::fs::read_to_string(destination).unwrap_or_default();
             if existing == yaml {
-                println!("Configuration is already up to date at {destination}.");
-                println!();
-                println!("Run `devopster repo list` to get started.");
+                ui::success(&format!(
+                    "Configuration is already up to date at {destination}."
+                ));
+                ui::info("Run `devopster repo list` to get started.");
                 return Ok(());
             }
 
-            // Show what will change.
-            println!("Configuration summary (will be saved to {destination}):");
-            println!();
-            print_config_summary(provider, &org, project.as_deref(), &scoped_repos, copilot_enabled);
+            ui::section(&format!("Review configuration for {destination}"));
+            print_config_summary(
+                provider,
+                &org,
+                project.as_deref(),
+                &scoped_repos,
+                copilot_enabled,
+            );
 
-            // Show what is currently in the file so the user can see what they'd lose.
-            println!();
-            println!("Existing file contents:");
-            println!("  {}", existing.lines().take(8).collect::<Vec<_>>().join("\n  "));
-            if existing.lines().count() > 8 {
-                println!("  ... ({} more lines)", existing.lines().count().saturating_sub(8));
+            ui::info("Existing file preview:");
+            for line in existing.lines().take(8) {
+                ui::item(line);
             }
-            println!();
-            print!("Apply these values? [Y/n]: ");
-            io::stdout().flush().ok();
-            let mut ow = String::new();
-            io::stdin().read_line(&mut ow).ok();
-            let answer = ow.trim();
-            if answer.eq_ignore_ascii_case("n") {
-                println!("Keeping existing config.");
+            if existing.lines().count() > 8 {
+                ui::item(&format!(
+                    "... ({} more lines)",
+                    existing.lines().count().saturating_sub(8)
+                ));
+            }
+            if !ui::prompt_confirm("Apply these values?", true)? {
+                ui::warn("Keeping existing config.");
                 return Ok(());
             }
         } else {
-            println!("Configuration summary (will be saved to {destination}):");
-            println!();
-            print_config_summary(provider, &org, project.as_deref(), &scoped_repos, copilot_enabled);
-            println!();
-            print!("Save this configuration? [Y/n]: ");
-            io::stdout().flush().ok();
-            let mut confirm = String::new();
-            io::stdin().read_line(&mut confirm).ok();
-            if confirm.trim().eq_ignore_ascii_case("n") {
-                println!("Cancelled.");
+            ui::section(&format!("Review configuration for {destination}"));
+            print_config_summary(
+                provider,
+                &org,
+                project.as_deref(),
+                &scoped_repos,
+                copilot_enabled,
+            );
+            if !ui::prompt_confirm("Save this configuration?", true)? {
+                ui::warn("Cancelled.");
                 return Ok(());
             }
         }
@@ -140,9 +140,8 @@ impl InitCommand {
         std::fs::write(destination, &yaml)
             .with_context(|| format!("failed to write config to {destination}"))?;
 
-        println!();
-        println!("Configuration saved to {destination}.");
-        println!("Run `devopster repo list` to get started.");
+        ui::success(&format!("Configuration saved to {destination}."));
+        ui::info("Run `devopster repo list` to get started.");
 
         Ok(())
     }
@@ -181,7 +180,7 @@ async fn pick_org(provider: &str) -> Result<(String, Option<String>, String)> {
 }
 
 async fn pick_github_org() -> Result<(String, Option<String>, String)> {
-    println!("Fetching your GitHub accounts and organizations...");
+    ui::info("Fetching your GitHub accounts and organizations...");
 
     let mut orgs: Vec<String> = Vec::new();
 
@@ -212,54 +211,34 @@ async fn pick_github_org() -> Result<(String, Option<String>, String)> {
         return ask_org_url("github");
     }
 
-    println!("Available accounts and organizations:");
-    for (i, org) in orgs.iter().enumerate() {
-        println!("  {}) {}", i + 1, org);
-    }
-    print!("Choice [1] or paste a GitHub URL: ");
-    io::stdout().flush().ok();
-
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).context("failed to read org choice")?;
-    let trimmed = input.trim();
-
-    if trimmed.starts_with("http") {
-        let org = last_url_segment(trimmed)?;
+    let mut options = orgs.clone();
+    options.push("Paste a GitHub URL".to_string());
+    let selected = ui::select("GitHub account or organization", &options, 0)?;
+    if selected == options.len() - 1 {
+        let input = ui::prompt_input("GitHub URL")?;
+        let org = last_url_segment(input.trim())?;
         return Ok((org, None, "https://api.github.com".to_string()));
     }
 
-    let idx = parse_index_or_default(trimmed, 1).saturating_sub(1);
-    let selected = orgs.get(idx).unwrap_or(&orgs[0]).clone();
+    let selected = orgs.get(selected).unwrap_or(&orgs[0]).clone();
     let org = selected.trim_end_matches(" (personal)").to_string();
     Ok((org, None, "https://api.github.com".to_string()))
 }
 
 async fn pick_azure_org() -> Result<(String, Option<String>, String)> {
-    println!("Enter your Azure DevOps organization URL");
-    println!("  e.g. https://dev.azure.com/my-org");
-    print!("URL: ");
-    io::stdout().flush().ok();
-
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).context("failed to read Azure DevOps org URL")?;
+    ui::info("Enter your Azure DevOps organization URL, for example https://dev.azure.com/my-org.");
+    let input = ui::prompt_input("Azure DevOps URL")?;
     let org_url = input.trim().trim_end_matches('/').to_string();
 
-    let org_name = last_url_segment(&org_url)
-        .context("could not extract org name from Azure DevOps URL")?;
+    let org_name =
+        last_url_segment(&org_url).context("could not extract org name from Azure DevOps URL")?;
 
     // List projects under this org
-    println!("Fetching projects for {}...", org_url);
+    ui::info(&format!("Fetching projects for {}...", org_url));
     let projects: Vec<String> = cli_capture(
         "az",
         &[
-            "devops",
-            "project",
-            "list",
-            "--org",
-            &org_url,
-            "--output",
-            "json",
-            "--query",
+            "devops", "project", "list", "--org", &org_url, "--output", "json", "--query",
             "[].name",
         ],
     )
@@ -273,15 +252,7 @@ async fn pick_azure_org() -> Result<(String, Option<String>, String)> {
     } else if projects.len() == 1 {
         projects.into_iter().next().unwrap()
     } else {
-        println!("Available projects:");
-        for (i, p) in projects.iter().enumerate() {
-            println!("  {}) {}", i + 1, p);
-        }
-        print!("Choice [1]: ");
-        io::stdout().flush().ok();
-        let mut p_input = String::new();
-        io::stdin().read_line(&mut p_input).context("failed to read project choice")?;
-        let idx = parse_index_or_default(p_input.trim(), 1).saturating_sub(1);
+        let idx = ui::select("Azure DevOps project", &projects, 0)?;
         projects.get(idx).unwrap_or(&projects[0]).clone()
     };
 
@@ -289,7 +260,7 @@ async fn pick_azure_org() -> Result<(String, Option<String>, String)> {
 }
 
 async fn pick_gitlab_group() -> Result<(String, Option<String>, String)> {
-    println!("Fetching your GitLab namespaces and groups...");
+    ui::info("Fetching your GitLab namespaces and groups...");
 
     let mut groups: Vec<String> = Vec::new();
 
@@ -304,7 +275,14 @@ async fn pick_gitlab_group() -> Result<(String, Option<String>, String)> {
     // Groups the user is a member of
     if let Ok(out) = cli_capture(
         "glab",
-        &["api", "/groups", "--field", "per_page=100", "-q", ".[].full_path"],
+        &[
+            "api",
+            "/groups",
+            "--field",
+            "per_page=100",
+            "-q",
+            ".[].full_path",
+        ],
     )
     .await
     {
@@ -320,24 +298,16 @@ async fn pick_gitlab_group() -> Result<(String, Option<String>, String)> {
         return ask_org_url("gitlab");
     }
 
-    println!("Available namespaces and groups:");
-    for (i, g) in groups.iter().enumerate() {
-        println!("  {}) {}", i + 1, g);
-    }
-    print!("Choice [1] or paste a GitLab URL: ");
-    io::stdout().flush().ok();
-
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).context("failed to read group choice")?;
-    let trimmed = input.trim();
-
-    if trimmed.starts_with("http") {
-        let group = last_url_segment(trimmed)?;
+    let mut options = groups.clone();
+    options.push("Paste a GitLab URL".to_string());
+    let selected = ui::select("GitLab namespace or group", &options, 0)?;
+    if selected == options.len() - 1 {
+        let input = ui::prompt_input("GitLab URL")?;
+        let group = last_url_segment(input.trim())?;
         return Ok((group, None, "https://gitlab.com/api/v4".to_string()));
     }
 
-    let idx = parse_index_or_default(trimmed, 1).saturating_sub(1);
-    let selected = groups.get(idx).unwrap_or(&groups[0]).clone();
+    let selected = groups.get(selected).unwrap_or(&groups[0]).clone();
     let group = selected.trim_end_matches(" (personal)").to_string();
     Ok((group, None, "https://gitlab.com/api/v4".to_string()))
 }
@@ -348,13 +318,8 @@ fn ask_org_url(provider: &str) -> Result<(String, Option<String>, String)> {
         "gitlab" => "https://gitlab.com/my-group",
         _ => "https://dev.azure.com/my-org",
     };
-    println!("Could not fetch organizations automatically.");
-    println!("Paste your organization URL (e.g. {example}):");
-    print!("URL: ");
-    io::stdout().flush().ok();
-
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).context("failed to read org URL")?;
+    ui::warn("Could not fetch organizations automatically.");
+    let input = ui::prompt_input(&format!("Organization URL (for example {example})"))?;
     let url_owned = input.trim().trim_end_matches('/').to_string();
 
     let org = last_url_segment(&url_owned)?;
@@ -382,57 +347,44 @@ async fn pick_repos(
     let repos = match repos {
         Ok(r) if !r.is_empty() => r,
         _ => {
-            println!("  Could not fetch repository list -- all repos will be targeted.");
+            ui::warn("Could not fetch the repository list. All repositories will be targeted.");
             return Vec::new();
         }
     };
 
-    println!("Found {} repositories in {}.", repos.len(), org);
-    println!("  a) Target all {} repositories", repos.len());
-    println!("  s) Select specific repositories");
-    print!("Choice [a]: ");
-    io::stdout().flush().ok();
+    ui::info(&format!("Found {} repositories in {}.", repos.len(), org));
+    let scope_options = vec![
+        format!("Target all {} repositories", repos.len()),
+        "Select specific repositories".to_string(),
+    ];
+    let scope = match ui::select("Repository scope", &scope_options, 0) {
+        Ok(choice) => choice,
+        Err(_) => return Vec::new(),
+    };
 
-    let mut scope_input = String::new();
-    if io::stdin().read_line(&mut scope_input).is_err() {
+    if scope == 0 {
         return Vec::new();
     }
 
-    if !scope_input.trim().eq_ignore_ascii_case("s") {
-        return Vec::new(); // empty = all
-    }
+    let selected = match ui::multi_select("Select repositories", &repos, None) {
+        Ok(selected) => selected,
+        Err(_) => return Vec::new(),
+    };
 
-    println!();
-    for (i, r) in repos.iter().enumerate() {
-        println!("  {:>3}) {}", i + 1, r);
-    }
-    println!();
-    print!("Enter numbers (comma-separated) or 'a' for all: ");
-    io::stdout().flush().ok();
-
-    let mut sel = String::new();
-    if io::stdin().read_line(&mut sel).is_err() {
+    if selected.is_empty() {
         return Vec::new();
     }
 
-    let trimmed = sel.trim();
-    if trimmed.eq_ignore_ascii_case("a") {
-        return Vec::new();
-    }
-
-    let selected: Vec<String> = trimmed
-        .split(',')
-        .filter_map(|s| {
-            let idx = s.trim().parse::<usize>().ok()?.saturating_sub(1);
-            repos.get(idx).cloned()
-        })
+    let selected: Vec<String> = selected
+        .into_iter()
+        .filter_map(|idx| repos.get(idx).cloned())
         .collect();
 
     if selected.is_empty() {
         return Vec::new();
     }
 
-    println!("  {} repositories selected.", selected.len());
+    ui::success(&format!("{} repositories selected.", selected.len()));
     selected
 }
 
@@ -447,10 +399,7 @@ async fn fetch_repo_names(
             let out = cli_capture(
                 "gh",
                 &[
-                    "repo", "list", org,
-                    "--limit", "200",
-                    "--json", "name",
-                    "--jq", ".[].name",
+                    "repo", "list", org, "--limit", "200", "--json", "name", "--jq", ".[].name",
                 ],
             )
             .await?;
@@ -461,11 +410,16 @@ async fn fetch_repo_names(
             let json = cli_capture(
                 "az",
                 &[
-                    "repos", "list",
-                    "--org", org_url,
-                    "--project", project,
-                    "--output", "json",
-                    "--query", "[].name",
+                    "repos",
+                    "list",
+                    "--org",
+                    org_url,
+                    "--project",
+                    project,
+                    "--output",
+                    "json",
+                    "--query",
+                    "[].name",
                 ],
             )
             .await?;
@@ -473,8 +427,7 @@ async fn fetch_repo_names(
         }
         "gitlab" => {
             let encoded = org.replace('/', "%2F");
-            let endpoint =
-                format!("/groups/{encoded}/projects?per_page=100&simple=true");
+            let endpoint = format!("/groups/{encoded}/projects?per_page=100&simple=true");
             let out = cli_capture("glab", &["api", &endpoint, "-q", ".[].path"]).await?;
             Ok(non_empty_lines(&out))
         }
@@ -485,17 +438,11 @@ async fn fetch_repo_names(
 // ── Copilot prompt ────────────────────────────────────────────────────────────
 
 async fn ask_copilot_enabled() -> bool {
-    print!("Enable Copilot-assisted suggestions for repos missing topics or descriptions? \
-            (Requires a GitHub Copilot subscription.) [Y/n]: ");
-    io::stdout().flush().ok();
-
-    let mut input = String::new();
-    if io::stdin().read_line(&mut input).is_err() {
-        return true;
-    }
-    let trimmed = input.trim();
-    // Default is Y — only 'n' or 'no' disables it.
-    trimmed.is_empty() || !trimmed.eq_ignore_ascii_case("n")
+    ui::prompt_confirm(
+        "Enable Copilot-assisted suggestions for repos missing topics or descriptions?",
+        true,
+    )
+    .unwrap_or(true)
 }
 
 // ── Config summary display ────────────────────────────────────────────────────
@@ -507,18 +454,31 @@ fn print_config_summary(
     scoped_repos: &[String],
     copilot_enabled: bool,
 ) {
-    let w = 18usize;
-    println!("  {:<w$} {}", "Provider:", provider_display(provider));
-    println!("  {:<w$} {}", "Organization:", org);
+    ui::key_value("Provider", provider_display(provider));
+    ui::key_value("Organization", org);
     if let Some(p) = project {
-        println!("  {:<w$} {}", "Project:", p);
+        ui::key_value("Project", p);
     }
     if scoped_repos.is_empty() {
-        println!("  {:<w$} all repositories", "Scope:");
+        ui::key_value("Scope", "all repositories");
     } else {
-        println!("  {:<w$} {} selected: {}", "Scope:", scoped_repos.len(), scoped_repos.join(", "));
+        ui::key_value(
+            "Scope",
+            format!(
+                "{} selected: {}",
+                scoped_repos.len(),
+                scoped_repos.join(", ")
+            ),
+        );
     }
-    println!("  {:<w$} {}", "Copilot:", if copilot_enabled { "enabled" } else { "disabled" });
+    ui::key_value(
+        "Copilot",
+        if copilot_enabled {
+            "enabled"
+        } else {
+            "disabled"
+        },
+    );
 }
 
 // ── Config YAML builder ───────────────────────────────────────────────────────
@@ -629,18 +589,6 @@ fn last_url_segment(url: &str) -> Result<String> {
         .context("could not extract name from URL")
 }
 
-fn parse_index_or_default(s: &str, default: usize) -> usize {
-    if s.is_empty() {
-        default
-    } else {
-        s.parse::<usize>().unwrap_or(default)
-    }
-}
-
 fn prompt(label: &str) -> Result<String> {
-    print!("{label}: ");
-    io::stdout().flush().ok();
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).context("failed to read input")?;
-    Ok(input.trim().to_string())
+    Ok(ui::prompt_input(label)?.trim().to_string())
 }

@@ -3,6 +3,7 @@ mod auth;
 mod cli;
 mod config;
 mod provider;
+mod ui;
 
 use anyhow::Result;
 

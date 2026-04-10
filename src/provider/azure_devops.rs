@@ -40,11 +40,13 @@ impl Provider for AzureDevOpsProvider {
     async fn list_repositories(&self, organization: &str) -> Result<Vec<RepoSummary>> {
         let endpoint = self.repositories_endpoint(organization)?;
         let response = self.client.get(endpoint).send().await.with_context(|| {
-            format!("failed to call Azure DevOps repository API for project {}", self.project)
+            format!(
+                "failed to call Azure DevOps repository API for project {}",
+                self.project
+            )
         });
 
-        let response = response
-            .map_err(|e| auth::annotate_auth_error(e, "azure_devops"))?;
+        let response = response.map_err(|e| auth::annotate_auth_error(e, "azure_devops"))?;
 
         if response.status() == StatusCode::NOT_FOUND {
             anyhow::bail!(
@@ -54,11 +56,17 @@ impl Provider for AzureDevOpsProvider {
         }
 
         let response = response.error_for_status().with_context(|| {
-            format!("Azure DevOps repository API returned an error for project {}", self.project)
+            format!(
+                "Azure DevOps repository API returned an error for project {}",
+                self.project
+            )
         })?;
 
         let payload: AzureDevOpsRepositoryList = response.json().await.with_context(|| {
-            format!("failed to decode Azure DevOps repository response for {}", self.project)
+            format!(
+                "failed to decode Azure DevOps repository response for {}",
+                self.project
+            )
         })?;
 
         Ok(payload.value.into_iter().map(RepoSummary::from).collect())
@@ -122,7 +130,12 @@ impl Provider for AzureDevOpsProvider {
             .json(&payload)
             .send()
             .await
-            .with_context(|| format!("failed to create Azure DevOps repository '{}'", request.name))?
+            .with_context(|| {
+                format!(
+                    "failed to create Azure DevOps repository '{}'",
+                    request.name
+                )
+            })?
             .error_for_status()
             .with_context(|| {
                 format!(
@@ -152,7 +165,10 @@ impl AzureDevOpsProvider {
     fn repositories_endpoint(&self, organization: &str) -> Result<Url> {
         let mut endpoint = self
             .api_url
-            .join(&format!("/{organization}/{}/_apis/git/repositories", self.project))
+            .join(&format!(
+                "/{organization}/{}/_apis/git/repositories",
+                self.project
+            ))
             .with_context(|| {
                 format!(
                     "failed to build Azure DevOps repositories URL for project {}",
@@ -160,9 +176,7 @@ impl AzureDevOpsProvider {
                 )
             })?;
 
-        endpoint
-            .query_pairs_mut()
-            .append_pair("api-version", "7.1");
+        endpoint.query_pairs_mut().append_pair("api-version", "7.1");
 
         Ok(endpoint)
     }

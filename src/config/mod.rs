@@ -64,8 +64,12 @@ impl Default for AuditConfig {
     }
 }
 
-fn default_true() -> bool { true }
-fn default_min_topics() -> usize { 1 }
+fn default_true() -> bool {
+    true
+}
+fn default_min_topics() -> usize {
+    1
+}
 
 #[derive(Debug, Clone, Deserialize)]
 pub enum ProviderKind {

@@ -144,9 +144,9 @@ impl ProviderFactory {
     pub fn from_config(config: &AppConfig) -> Result<Box<dyn Provider>> {
         match &config.provider {
             ProviderKind::GitHub => Ok(Box::new(github::GitHubProvider::from_config(config)?)),
-            ProviderKind::AzureDevOps => {
-                Ok(Box::new(azure_devops::AzureDevOpsProvider::from_config(config)?))
-            }
+            ProviderKind::AzureDevOps => Ok(Box::new(
+                azure_devops::AzureDevOpsProvider::from_config(config)?,
+            )),
             ProviderKind::GitLab => Ok(Box::new(gitlab::GitLabProvider::from_config(config)?)),
         }
     }

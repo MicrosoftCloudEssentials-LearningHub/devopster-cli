@@ -1,11 +1,11 @@
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
-use std::io::{self, Write};
 
 use crate::config::{AppConfig, AuditConfig};
 use crate::provider::{
     AuditFinding, AuditPolicy, BlueprintRequest, ProviderFactory, RepoSummary, RepoVisibility,
 };
+use crate::ui;
 
 #[derive(Debug, Args)]
 pub struct RepoCommand {
@@ -60,7 +60,10 @@ pub struct SyncReposCommand {
     #[arg(long, value_name = "PATH")]
     pub blueprint_path: Vec<String>,
 
-    #[arg(long, help = "Only sync to repositories matching this template (by topic overlap)")]
+    #[arg(
+        long,
+        help = "Only sync to repositories matching this template (by topic overlap)"
+    )]
     pub template: Option<String>,
 }
 
@@ -85,7 +88,8 @@ const ORG_PROFILE_LINE: &str = "[brown9804](https://github.com/brown9804)";
 const ORG_SEPARATOR_LINE: &str = "----------";
 const ORG_BADGE_START_MARKER: &str = "<!-- START BADGE -->";
 const ORG_BADGE_END_MARKER: &str = "<!-- END BADGE -->";
-const ORG_TOTAL_VIEWS_BADGE_FALLBACK: &str = "https://img.shields.io/badge/Total%20views-0-limegreen";
+const ORG_TOTAL_VIEWS_BADGE_FALLBACK: &str =
+    "https://img.shields.io/badge/Total%20views-0-limegreen";
 
 impl RepoCommand {
     pub async fn run(&self, config_path: &str) -> Result<()> {
@@ -104,10 +108,10 @@ impl RepoCommand {
                         &config.organization,
                         &AuditPolicy {
                             required_default_branch: config.default_branch.clone(),
-                            require_description:    config.audit.require_description,
-                            require_topics:         config.audit.require_topics,
-                            min_topics:             config.audit.min_topics,
-                            require_license:        config.audit.require_license,
+                            require_description: config.audit.require_description,
+                            require_topics: config.audit.require_topics,
+                            min_topics: config.audit.min_topics,
+                            require_license: config.audit.require_license,
                             require_default_branch: config.audit.require_default_branch,
                         },
                     )
@@ -139,10 +143,7 @@ impl RepoCommand {
                         .iter()
                         .find(|t| t.name == *template_name)
                         .ok_or_else(|| {
-                            anyhow::anyhow!(
-                                "template '{}' not found in config",
-                                template_name
-                            )
+                            anyhow::anyhow!("template '{}' not found in config", template_name)
                         })?;
                     repos
                         .into_iter()
@@ -157,7 +158,7 @@ impl RepoCommand {
                 };
 
                 if repos_to_sync.is_empty() {
-                    println!("No repositories matched the configured sync scope.");
+                    ui::warn("No repositories matched the configured sync scope.");
                     return Ok(());
                 }
 
@@ -181,7 +182,10 @@ impl RepoCommand {
                     .find(|template| template.name == command.template)
                     .cloned()
                     .ok_or_else(|| {
-                        anyhow::anyhow!("template '{}' was not found in the config", command.template)
+                        anyhow::anyhow!(
+                            "template '{}' was not found in the config",
+                            command.template
+                        )
                     })?;
 
                 let request = BlueprintRequest {
@@ -202,9 +206,12 @@ impl RepoCommand {
                     .blueprint_repository(&config.organization, &request)
                     .await?;
 
-                println!("Created repository '{}' via {}.", result.name, result.provider);
+                ui::success(&format!(
+                    "Created repository '{}' via {}.",
+                    result.name, result.provider
+                ));
                 if let Some(web_url) = result.web_url {
-                    println!("URL: {web_url}");
+                    ui::key_value("URL", web_url);
                 }
             }
         }
@@ -215,7 +222,7 @@ impl RepoCommand {
 
 fn print_audit_findings(findings: Vec<AuditFinding>) {
     if findings.is_empty() {
-        println!("Audit passed: all repositories meet the configured policy.");
+        ui::success("Audit passed: all repositories meet the configured policy.");
         return;
     }
 
@@ -226,25 +233,20 @@ fn print_audit_findings(findings: Vec<AuditFinding>) {
         by_repo.entry(f.repository.as_str()).or_default().push(f);
     }
 
-    let sep = "-".repeat(64);
-    println!("{sep}");
-    println!(
-        "  Audit findings: {} issue(s) in {} repository(ies)",
+    ui::header("Audit Findings");
+    ui::info(&format!(
+        "{} issue(s) across {} repository(ies).",
         findings.len(),
         by_repo.len()
-    );
-    println!("{sep}");
+    ));
     for (repo, repo_findings) in &by_repo {
-        println!("  {repo}");
+        ui::section(repo);
         for f in repo_findings {
-            println!("    [{}] {}", f.code, f.message);
+            ui::item(&format!("[{}] {}", f.code, f.message));
         }
     }
-    println!("{sep}");
-    println!(
-        "  Tip: run 'devopster stats --scope-missing' to scope to these repos,"
-    );
-    println!("  then use 'devopster topics align' or 'devopster repo sync' to fix.");
+    ui::info("Tip: run 'devopster stats --scope-missing' to scope to these repos.");
+    ui::info("Then use 'devopster topics align' or 'devopster repo sync' to fix them.");
 }
 
 struct ResolvedBlueprintSource {
@@ -283,7 +285,11 @@ fn resolve_blueprint_source(
         paths.push(".github".to_string());
     }
 
-    Ok(ResolvedBlueprintSource { repo, branch, paths })
+    Ok(ResolvedBlueprintSource {
+        repo,
+        branch,
+        paths,
+    })
 }
 
 fn parse_repo_slug(input: &str) -> Result<(String, String)> {
@@ -319,15 +325,15 @@ async fn sync_local_files(
 
     let files = collect_sync_files(source_path)?;
     if files.is_empty() {
-        println!("No files found in '{}'.", command.source);
+        ui::warn(&format!("No files found in '{}'.", command.source));
         return Ok(());
     }
 
-    println!(
+    ui::info(&format!(
         "Syncing {} file(s) to {} repositories...",
         files.len(),
         repos_to_sync.len()
-    );
+    ));
 
     let commit_msg = format!(
         "chore: sync files from devopster (source: {})",
@@ -350,22 +356,22 @@ async fn sync_local_files(
             {
                 Ok(()) => {
                     sync_count += 1;
-                    println!("  synced '{}' -> '{}'", relative_path, repo.name);
+                    ui::item(&format!("synced '{}' -> '{}'", relative_path, repo.name));
                 }
                 Err(err) => {
                     error_count += 1;
-                    eprintln!(
-                        "  error syncing '{}' to '{}': {err:#}",
+                    ui::error(&format!(
+                        "error syncing '{}' to '{}': {err:#}",
                         relative_path, repo.name
-                    );
+                    ));
                 }
             }
         }
     }
 
-    println!(
+    ui::success(&format!(
         "Sync complete: {sync_count} file(s) synced, {error_count} error(s)."
-    );
+    ));
     Ok(())
 }
 
@@ -392,18 +398,18 @@ async fn sync_blueprint_requirements(
         .collect();
 
     if blueprint_workflows.is_empty() {
-        println!(
+        ui::warn(&format!(
             "No workflow files found in blueprint repo '{}' under the configured paths.",
             blueprint.repo
-        );
+        ));
         return Ok(());
     }
 
-    println!(
+    ui::info(&format!(
         "Checking {} required workflow file(s) and org README markers across {} repositories...",
         blueprint_workflows.len(),
         repos_to_sync.len()
-    );
+    ));
 
     let inspect_paths = vec![".github/workflows".to_string(), "README.md".to_string()];
     let mut sync_count = 0usize;
@@ -445,10 +451,10 @@ async fn sync_blueprint_requirements(
             .map(|bytes| String::from_utf8_lossy(bytes).into_owned());
         let missing_readme = detect_missing_readme_parts(current_readme.as_deref());
 
-        println!("\nRepository: {}", repo.name);
+        ui::section(&format!("Repository: {}", repo.name));
 
         if missing_workflows.is_empty() && !missing_readme.any() {
-            println!("  OK: required blueprint workflows and README markers are present.");
+            ui::success("Required blueprint workflows and README markers are present.");
             continue;
         }
 
@@ -458,7 +464,7 @@ async fn sync_blueprint_requirements(
                 .map(|(path, _)| path.trim_start_matches(".github/workflows/"))
                 .collect::<Vec<_>>()
                 .join(", ");
-            println!("  Missing workflow files: {workflow_names}");
+            ui::warn(&format!("Missing workflow files: {workflow_names}"));
 
             if prompt_confirm(
                 "  Add missing workflow file(s) from the blueprint repo?",
@@ -477,37 +483,35 @@ async fn sync_blueprint_requirements(
                     {
                         Ok(()) => {
                             sync_count += 1;
-                            println!("  added '{}'", relative_path);
+                            ui::item(&format!("added '{}'", relative_path));
                         }
                         Err(err) => {
                             error_count += 1;
-                            eprintln!(
-                                "  error syncing '{}' to '{}': {err:#}",
+                            ui::error(&format!(
+                                "error syncing '{}' to '{}': {err:#}",
                                 relative_path, repo.name
-                            );
+                            ));
                         }
                     }
                 }
             } else {
                 skipped_count += missing_workflows.len();
-                println!("  Skipped workflow updates.");
+                ui::warn("Skipped workflow updates.");
             }
         }
 
         if missing_readme.any() {
-            println!(
-                "  README missing: {}",
+            ui::warn(&format!(
+                "README missing: {}",
                 missing_readme.labels().join(", ")
-            );
+            ));
 
             if prompt_confirm(
                 "  Update README with the org header and badge markers?",
                 true,
             )? {
-                let repair_values = resolve_readme_repair_values(
-                    current_readme.as_deref(),
-                    missing_readme,
-                )?;
+                let repair_values =
+                    resolve_readme_repair_values(current_readme.as_deref(), missing_readme)?;
                 let updated_readme = apply_org_readme_standard(
                     &repo.name,
                     current_readme.as_deref(),
@@ -526,23 +530,26 @@ async fn sync_blueprint_requirements(
                 {
                     Ok(()) => {
                         sync_count += 1;
-                        println!("  updated 'README.md'");
+                        ui::item("updated 'README.md'");
                     }
                     Err(err) => {
                         error_count += 1;
-                        eprintln!("  error updating 'README.md' in '{}': {err:#}", repo.name);
+                        ui::error(&format!(
+                            "error updating 'README.md' in '{}': {err:#}",
+                            repo.name
+                        ));
                     }
                 }
             } else {
                 skipped_count += 1;
-                println!("  Skipped README update.");
+                ui::warn("Skipped README update.");
             }
         }
     }
 
-    println!(
+    ui::success(&format!(
         "Blueprint sync complete: {sync_count} file(s) synced, {skipped_count} item(s) skipped, {error_count} error(s)."
-    );
+    ));
     Ok(())
 }
 
@@ -614,11 +621,10 @@ fn resolve_readme_repair_values(
     readme: Option<&str>,
     missing: MissingReadmeParts,
 ) -> Result<ReadmeRepairValues> {
-    let existing_location = find_location_line(readme).unwrap_or_else(|| ORG_DEFAULT_LOCATION.to_string());
+    let existing_location =
+        find_location_line(readme).unwrap_or_else(|| ORG_DEFAULT_LOCATION.to_string());
     let location_line = if missing.location {
-        let input = prompt_line(&format!(
-            "  Location [default: {existing_location}]: "
-        ))?;
+        let input = prompt_line(&format!("  Location [default: {existing_location}]: "))?;
         if input.trim().is_empty() {
             existing_location
         } else {
@@ -628,12 +634,10 @@ fn resolve_readme_repair_values(
         existing_location
     };
 
-    let last_updated_value = find_last_updated_value(readme)
-        .unwrap_or_else(today_iso_date);
+    let last_updated_value = find_last_updated_value(readme).unwrap_or_else(today_iso_date);
     let total_views_badge = find_total_views_badge_url(readme)
         .unwrap_or_else(|| ORG_TOTAL_VIEWS_BADGE_FALLBACK.to_string());
-    let refresh_date = find_refresh_date_value(readme)
-        .unwrap_or_else(today_iso_date);
+    let refresh_date = find_refresh_date_value(readme).unwrap_or_else(today_iso_date);
 
     Ok(ReadmeRepairValues {
         location_line,
@@ -671,10 +675,7 @@ fn apply_org_readme_standard(
     content
 }
 
-fn build_org_header_additions(
-    missing: MissingReadmeParts,
-    values: &ReadmeRepairValues,
-) -> String {
+fn build_org_header_additions(missing: MissingReadmeParts, values: &ReadmeRepairValues) -> String {
     let mut sections = Vec::new();
     if missing.location {
         sections.push(values.location_line.clone());
@@ -740,8 +741,7 @@ fn has_complete_badge_block(markdown: &str) -> bool {
         return false;
     };
 
-    block.contains("img.shields.io/badge/Total%20views-")
-        && block.lines().any(is_refresh_date_line)
+    block.contains("img.shields.io/badge/Total%20views-") && block.lines().any(is_refresh_date_line)
 }
 
 fn extract_badge_block(markdown: &str) -> Option<&str> {
@@ -758,31 +758,30 @@ fn find_location_line(readme: Option<&str>) -> Option<String> {
 }
 
 fn find_last_updated_value(readme: Option<&str>) -> Option<String> {
-    readme?
-        .lines()
-        .find_map(|line| {
-            let value = line.trim().strip_prefix("Last updated: ")?;
-            is_iso_date(value).then(|| value.to_string())
-        })
+    readme?.lines().find_map(|line| {
+        let value = line.trim().strip_prefix("Last updated: ")?;
+        is_iso_date(value).then(|| value.to_string())
+    })
 }
 
 fn find_refresh_date_value(readme: Option<&str>) -> Option<String> {
-    readme?
-        .lines()
-        .find_map(|line| {
-            let value = line
-                .trim()
-                .strip_prefix("<p>Refresh Date: ")?
-                .strip_suffix("</p>")?;
-            is_iso_date(value).then(|| value.to_string())
-        })
+    readme?.lines().find_map(|line| {
+        let value = line
+            .trim()
+            .strip_prefix("<p>Refresh Date: ")?
+            .strip_suffix("</p>")?;
+        is_iso_date(value).then(|| value.to_string())
+    })
 }
 
 fn find_total_views_badge_url(readme: Option<&str>) -> Option<String> {
     readme?.lines().find_map(|line| {
         let start = line.find("https://img.shields.io/badge/Total%20views-")?;
         let rest = &line[start..];
-        let end = rest.find('"').or_else(|| rest.find(')')).unwrap_or(rest.len());
+        let end = rest
+            .find('"')
+            .or_else(|| rest.find(')'))
+            .unwrap_or(rest.len());
         Some(rest[..end].to_string())
     })
 }
@@ -803,8 +802,7 @@ fn iso_date_from_unix_days(unix_days: i64) -> String {
     let year_of_era =
         (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
     let mut year = year_of_era + era * 400;
-    let day_of_year =
-        day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
+    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
     let month_param = (5 * day_of_year + 2) / 153;
     let day = day_of_year - (153 * month_param + 2) / 5 + 1;
     let month = month_param + if month_param < 10 { 3 } else { -9 };
@@ -860,10 +858,9 @@ fn is_org_location_line(line: &str) -> bool {
     parts.len() == 2
         && parts.iter().all(|part| {
             !part.is_empty()
-                && part.chars().all(|c| {
-                    c.is_ascii_alphanumeric()
-                        || matches!(c, ' ' | '-' | '.' | '\'' | '&')
-                })
+                && part
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || matches!(c, ' ' | '-' | '.' | '\'' | '&'))
         })
 }
 
@@ -904,7 +901,7 @@ async fn fix_repos(provider: &dyn crate::provider::Provider, config: &AppConfig)
             false,
         )?;
         if !proceed {
-            println!("Aborted.");
+            ui::warn("Aborted.");
             return Ok(());
         }
     }
@@ -913,7 +910,7 @@ async fn fix_repos(provider: &dyn crate::provider::Provider, config: &AppConfig)
     let repos = scope_to_config(repos, &config.scoped_repos);
 
     if repos.is_empty() {
-        println!("No repositories matched the configured scope.");
+        ui::warn("No repositories matched the configured scope.");
         return Ok(());
     }
 
@@ -928,40 +925,40 @@ async fn fix_repos(provider: &dyn crate::provider::Provider, config: &AppConfig)
         .collect();
 
     if repos.is_empty() {
-        println!(
-            "No repositories in scope are missing description, topics, or license metadata."
+        ui::success(
+            "No repositories in scope are missing description, topics, or license metadata.",
         );
-        println!("Nothing to fix.");
+        ui::info("Nothing to fix.");
         return Ok(());
     }
 
     let supports_metadata = matches!(repos[0].0.provider, "github" | "gitlab");
     let supports_push = supports_metadata;
 
-    println!(
-        "\nFixing {} of {} repository(ies)...",
+    ui::info(&format!(
+        "Fixing {} of {} repository(ies)...",
         repos.len(),
         total_repos
-    );
+    ));
 
     for (repo, missing) in repos {
         let missing_description = missing.description;
         let missing_topics = missing.topics;
         let missing_license = missing.license;
 
-        println!("\nRepository: {}", repo.name);
+        ui::section(&format!("Repository: {}", repo.name));
         if missing_description {
-            println!("  - missing description");
+            ui::item("missing description");
         }
         if missing_topics {
-            println!("  - missing topics (min {})", config.audit.min_topics);
+            ui::item(&format!("missing topics (min {})", config.audit.min_topics));
         }
         if missing_license {
-            println!("  - missing license");
+            ui::item("missing license");
         }
 
         if !supports_metadata {
-            println!("  This provider does not support metadata updates yet.");
+            ui::warn("This provider does not support metadata updates yet.");
             continue;
         }
 
@@ -969,48 +966,25 @@ async fn fix_repos(provider: &dyn crate::provider::Provider, config: &AppConfig)
 
         if missing_topics {
             if config.templates.is_empty() {
-                println!("  No templates configured; enter topics manually.");
-            } else {
-                println!("  Templates:");
-                for (idx, template) in config.templates.iter().enumerate() {
-                    println!(
-                        "    {}. {} ({})",
-                        idx + 1,
-                        template.name,
-                        template.topics.join(", ")
-                    );
-                }
+                ui::warn("No templates configured; enter topics manually.");
             }
 
-            let input = prompt_line(
-                "  Topics (template #/name or comma list; blank to skip): ",
-            )?;
-            if !input.trim().is_empty() {
-                let topics = if let Some((template, topics)) =
-                    resolve_template_or_topics(&config.templates, &input)
+            let topics = select_topics_input(config, &mut chosen_template)?;
+            if !topics.is_empty() {
+                let merged = merge_topics(&repo.topics, &topics);
+                if merged.len() < config.audit.min_topics {
+                    ui::warn(&format!(
+                        "Skipping topics: only {} topic(s) provided (min {}).",
+                        merged.len(),
+                        config.audit.min_topics
+                    ));
+                } else if let Err(err) = provider
+                    .align_topics(&config.organization, &repo.name, &merged)
+                    .await
                 {
-                    chosen_template = Some(template);
-                    topics
+                    ui::error(&format!("Failed to update topics: {err:#}"));
                 } else {
-                    parse_topics_list(&input)
-                };
-
-                if !topics.is_empty() {
-                    let merged = merge_topics(&repo.topics, &topics);
-                    if merged.len() < config.audit.min_topics {
-                        println!(
-                            "  Skipping topics: only {} topic(s) provided (min {}).",
-                            merged.len(),
-                            config.audit.min_topics
-                        );
-                    } else if let Err(err) = provider
-                        .align_topics(&config.organization, &repo.name, &merged)
-                        .await
-                    {
-                        eprintln!("  Failed to update topics: {err:#}");
-                    } else {
-                        println!("  Topics updated: {}", merged.join(", "));
-                    }
+                    ui::success(&format!("Topics updated: {}", merged.join(", ")));
                 }
             }
         }
@@ -1047,22 +1021,20 @@ async fn fix_repos(provider: &dyn crate::provider::Provider, config: &AppConfig)
                     .update_description(&config.organization, &repo.name, &desc)
                     .await
                 {
-                    eprintln!("  Failed to update description: {err:#}");
+                    ui::error(&format!("Failed to update description: {err:#}"));
                 } else {
-                    println!("  Description updated.");
+                    ui::success("Description updated.");
                 }
             }
         }
 
         if missing_license {
             if !supports_push {
-                println!("  This provider does not support writing LICENSE files yet.");
+                ui::warn("This provider does not support writing LICENSE files yet.");
                 continue;
             }
 
-            let input = prompt_line(
-                "  License (mit/apache-2.0/bsd-3-clause/gpl-3.0 or file path; blank to skip): ",
-            )?;
+            let input = select_license_input()?;
             if input.trim().is_empty() {
                 continue;
             }
@@ -1070,11 +1042,10 @@ async fn fix_repos(provider: &dyn crate::provider::Provider, config: &AppConfig)
             let license_text = if let Some(text) = license_text_for(&input) {
                 text.to_string()
             } else if std::path::Path::new(input.trim()).exists() {
-                std::fs::read_to_string(input.trim()).with_context(|| {
-                    format!("failed to read license file '{}'", input.trim())
-                })?
+                std::fs::read_to_string(input.trim())
+                    .with_context(|| format!("failed to read license file '{}'", input.trim()))?
             } else {
-                println!("  Unknown license '{input}'. Skipping.");
+                ui::warn(&format!("Unknown license '{input}'. Skipping."));
                 continue;
             };
 
@@ -1088,9 +1059,9 @@ async fn fix_repos(provider: &dyn crate::provider::Provider, config: &AppConfig)
                 )
                 .await
             {
-                eprintln!("  Failed to write LICENSE: {err:#}");
+                ui::error(&format!("Failed to write LICENSE: {err:#}"));
             } else {
-                println!("  LICENSE committed.");
+                ui::success("LICENSE committed.");
             }
         }
     }
@@ -1106,7 +1077,9 @@ struct MissingMetadata {
 }
 
 impl MissingMetadata {
-    fn any(self) -> bool { self.description || self.topics || self.license }
+    fn any(self) -> bool {
+        self.description || self.topics || self.license
+    }
 }
 
 fn missing_metadata(repo: &RepoSummary, audit: &AuditConfig) -> MissingMetadata {
@@ -1132,29 +1105,35 @@ fn scope_to_config(repos: Vec<RepoSummary>, scoped: &[String]) -> Vec<RepoSummar
     if scoped.is_empty() {
         repos
     } else {
-        repos.into_iter().filter(|r| scoped.contains(&r.name)).collect()
+        repos
+            .into_iter()
+            .filter(|r| scoped.contains(&r.name))
+            .collect()
     }
 }
 
 fn print_repos(repos: Vec<RepoSummary>) {
     if repos.is_empty() {
-        println!("No repositories matched the requested filter.");
+        ui::warn("No repositories matched the requested filter.");
         return;
     }
 
     let total = repos.len();
     let separator = "-".repeat(72);
 
-    println!("{separator}");
+    ui::header("Repositories");
     for repo in repos {
-        // Name + provider badge on the same line
+        println!("{separator}");
         println!("{:<55} [{}]", repo.name, repo.provider);
 
         // Description (wrapped to keep the block readable)
         if !repo.description.is_empty() {
             // Truncate long descriptions to keep output scannable
             let desc = if repo.description.chars().count() > 120 {
-                format!("{}...", repo.description.chars().take(120).collect::<String>())
+                format!(
+                    "{}...",
+                    repo.description.chars().take(120).collect::<String>()
+                )
             } else {
                 repo.description.clone()
             };
@@ -1170,9 +1149,9 @@ fn print_repos(repos: Vec<RepoSummary>) {
         if let Some(url) = repo.web_url {
             println!("  {url}");
         }
-        println!("{separator}");
     }
-    println!("{total} repositories");
+    println!("{separator}");
+    ui::info(&format!("{total} repositories"));
 }
 
 fn collect_sync_files(source: &std::path::Path) -> Result<Vec<(String, Vec<u8>)>> {
@@ -1189,8 +1168,8 @@ fn collect_sync_files_recursive(
     for entry in std::fs::read_dir(dir)
         .with_context(|| format!("failed to read directory '{}'", dir.display()))?
     {
-        let entry = entry
-            .with_context(|| format!("failed to read entry in '{}'", dir.display()))?;
+        let entry =
+            entry.with_context(|| format!("failed to read entry in '{}'", dir.display()))?;
         let path = entry.path();
 
         if path.is_dir() {
@@ -1212,22 +1191,11 @@ fn collect_sync_files_recursive(
 }
 
 fn prompt_line(prompt: &str) -> Result<String> {
-    print!("{prompt}");
-    io::stdout().flush().ok();
-    let mut input = String::new();
-    io::stdin()
-        .read_line(&mut input)
-        .context("failed to read input")?;
-    Ok(input.trim().to_string())
+    Ok(ui::prompt_input(prompt)?.trim().to_string())
 }
 
 fn prompt_confirm(prompt: &str, default_yes: bool) -> Result<bool> {
-    let hint = if default_yes { "[Y/n]" } else { "[y/N]" };
-    let answer = prompt_line(&format!("{prompt} {hint}: "))?;
-    if answer.is_empty() {
-        return Ok(default_yes);
-    }
-    Ok(matches!(answer.to_lowercase().as_str(), "y" | "yes"))
+    ui::prompt_confirm(prompt, default_yes)
 }
 
 fn parse_topics_list(raw: &str) -> Vec<String> {
@@ -1238,27 +1206,62 @@ fn parse_topics_list(raw: &str) -> Vec<String> {
         .collect()
 }
 
-fn resolve_template_or_topics<'a>(
-    templates: &'a [crate::config::TemplateConfig],
-    input: &str,
-) -> Option<(&'a crate::config::TemplateConfig, Vec<String>)> {
-    let trimmed = input.trim();
-    if trimmed.is_empty() {
-        return None;
+fn select_topics_input<'a>(
+    config: &'a AppConfig,
+    chosen_template: &mut Option<&'a crate::config::TemplateConfig>,
+) -> Result<Vec<String>> {
+    if config.templates.is_empty() {
+        return Ok(parse_topics_list(&prompt_line(
+            "Topics (comma list; blank to skip)",
+        )?));
     }
 
-    if let Ok(index) = trimmed.parse::<usize>() {
-        if index > 0 && index <= templates.len() {
-            let template = &templates[index - 1];
-            return Some((template, template.topics.clone()));
-        }
+    let mut options = config
+        .templates
+        .iter()
+        .map(|template| {
+            format!(
+                "Use template: {} ({})",
+                template.name,
+                template.topics.join(", ")
+            )
+        })
+        .collect::<Vec<_>>();
+    options.push("Enter topics manually".to_string());
+    options.push("Skip topics update".to_string());
+
+    let choice = ui::select("How would you like to fill topics?", &options, 0)?;
+    if choice < config.templates.len() {
+        let template = &config.templates[choice];
+        *chosen_template = Some(template);
+        return Ok(template.topics.clone());
+    }
+    if choice == config.templates.len() {
+        return Ok(parse_topics_list(&prompt_line(
+            "Topics (comma list; blank to skip)",
+        )?));
     }
 
-    if let Some(template) = templates.iter().find(|t| t.name == trimmed) {
-        return Some((template, template.topics.clone()));
-    }
+    Ok(Vec::new())
+}
 
-    None
+fn select_license_input() -> Result<String> {
+    let options = vec![
+        "MIT".to_string(),
+        "Apache-2.0".to_string(),
+        "BSD-3-Clause".to_string(),
+        "GPL-3.0".to_string(),
+        "Use a custom license file path".to_string(),
+        "Skip license update".to_string(),
+    ];
+    match ui::select("Choose a license", &options, 0)? {
+        0 => Ok("mit".to_string()),
+        1 => Ok("apache-2.0".to_string()),
+        2 => Ok("bsd-3-clause".to_string()),
+        3 => Ok("gpl-3.0".to_string()),
+        4 => prompt_line("License file path"),
+        _ => Ok(String::new()),
+    }
 }
 
 fn merge_topics(existing: &[String], extra: &[String]) -> Vec<String> {
@@ -1388,7 +1391,7 @@ mod tests {
             last_updated_line: "Last updated: 2026-04-02".to_string(),
             badge_block: build_badge_block(
                 "https://img.shields.io/badge/Total%20views-42-limegreen",
-                "2026-04-02"
+                "2026-04-02",
             ),
         };
         let updated = apply_org_readme_standard(
@@ -1420,14 +1423,13 @@ mod tests {
 
     #[test]
     fn upsert_badge_block_replaces_existing_fragment() {
-        let original = format!(
-            "# demo\n\nBody\n\n{ORG_BADGE_START_MARKER}\nold\n{ORG_BADGE_END_MARKER}\n"
-        );
+        let original =
+            format!("# demo\n\nBody\n\n{ORG_BADGE_START_MARKER}\nold\n{ORG_BADGE_END_MARKER}\n");
         let updated = upsert_badge_block(
             &original,
             &build_badge_block(
                 "https://img.shields.io/badge/Total%20views-42-limegreen",
-                "2026-04-02"
+                "2026-04-02",
             ),
         );
 

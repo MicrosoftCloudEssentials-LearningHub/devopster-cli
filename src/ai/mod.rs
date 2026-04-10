@@ -81,8 +81,14 @@ async fn complete(token: &str, system: &str, user: &str) -> Result<String> {
         .json(&ChatRequest {
             model: "gpt-4o".into(),
             messages: vec![
-                ChatMessage { role: "system".into(), content: system.into() },
-                ChatMessage { role: "user".into(), content: user.into() },
+                ChatMessage {
+                    role: "system".into(),
+                    content: system.into(),
+                },
+                ChatMessage {
+                    role: "user".into(),
+                    content: user.into(),
+                },
             ],
             max_tokens: 256,
             temperature: 0.2,
@@ -93,8 +99,16 @@ async fn complete(token: &str, system: &str, user: &str) -> Result<String> {
         .error_for_status()
         .context("Copilot API returned an error")?;
 
-    let body: ChatResponse = resp.json().await.context("failed to decode Copilot response")?;
-    Ok(body.choices.into_iter().next().map(|c| c.message.content).unwrap_or_default())
+    let body: ChatResponse = resp
+        .json()
+        .await
+        .context("failed to decode Copilot response")?;
+    Ok(body
+        .choices
+        .into_iter()
+        .next()
+        .map(|c| c.message.content)
+        .unwrap_or_default())
 }
 
 /// Suggest up to 5 lowercase, hyphenated topics for a repository.
@@ -135,8 +149,16 @@ pub async fn suggest_description(
          Current description: \"{existing}\". Topics: [{topic_list}]"
     );
     let result = complete(&token, system, &prompt).await.ok()?;
-    let cleaned = result.trim().trim_matches('"').trim_matches('\'').to_string();
-    if cleaned.is_empty() { None } else { Some(cleaned) }
+    let cleaned = result
+        .trim()
+        .trim_matches('"')
+        .trim_matches('\'')
+        .to_string();
+    if cleaned.is_empty() {
+        None
+    } else {
+        Some(cleaned)
+    }
 }
 
 /// Explain audit findings in plain language and suggest how to fix them.
@@ -145,8 +167,7 @@ pub async fn explain_audit_findings(findings_summary: &str, github_token: &str) 
     let token = copilot_token(github_token).await?;
     let system = "You are a helpful assistant that explains repository audit findings \
                   and suggests concise, actionable fixes.";
-    let prompt = format!(
-        "Explain these audit findings and suggest how to fix them:\n\n{findings_summary}"
-    );
+    let prompt =
+        format!("Explain these audit findings and suggest how to fix them:\n\n{findings_summary}");
     complete(&token, system, &prompt).await.ok()
 }

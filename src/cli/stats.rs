@@ -3,6 +3,7 @@ use clap::Args;
 
 use crate::config::AppConfig;
 use crate::provider::ProviderFactory;
+use crate::ui;
 
 #[derive(Debug, Args)]
 pub struct StatsCommand {
@@ -45,7 +46,12 @@ impl StatsCommand {
         let mut wrong_branch: Vec<(&str, &str)> = repos
             .iter()
             .filter(|r| r.default_branch.as_deref() != Some(required_branch))
-            .map(|r| (r.name.as_str(), r.default_branch.as_deref().unwrap_or("<unset>")))
+            .map(|r| {
+                (
+                    r.name.as_str(),
+                    r.default_branch.as_deref().unwrap_or("<unset>"),
+                )
+            })
             .collect();
         wrong_branch.sort_unstable_by_key(|(n, _)| *n);
 
@@ -78,26 +84,33 @@ impl StatsCommand {
             .iter()
             .filter_map(|r| {
                 let mut issues: Vec<&str> = Vec::new();
-                if r.description.trim().is_empty() { issues.push("no description"); }
-                if r.topics.is_empty()             { issues.push("no topics"); }
-                if r.license.is_none()             { issues.push("no license"); }
+                if r.description.trim().is_empty() {
+                    issues.push("no description");
+                }
+                if r.topics.is_empty() {
+                    issues.push("no topics");
+                }
+                if r.license.is_none() {
+                    issues.push("no license");
+                }
                 if r.default_branch.as_deref() != Some(required_branch) {
                     issues.push("wrong branch");
                 }
-                if issues.is_empty() { None } else { Some((r.name.as_str(), issues)) }
+                if issues.is_empty() {
+                    None
+                } else {
+                    Some((r.name.as_str(), issues))
+                }
             })
             .collect();
         non_compliant.sort_unstable_by_key(|(n, _)| *n);
         let compliant_count = total - non_compliant.len();
 
         // --- output ---
-        let sep  = "=".repeat(56);
         let thin = "-".repeat(56);
-        let w    = 32usize;
+        let w = 32usize;
 
-        println!("{sep}");
-        println!("  Organization stats");
-        println!("{sep}");
+        ui::header("Organization Stats");
         println!("{:<w$} {}", "  Config:", config_path);
         println!("{:<w$} {}", "  Organization:", config.organization);
         println!("{:<w$} {}", "  Provider:", config.provider.as_str());
@@ -112,14 +125,36 @@ impl StatsCommand {
         println!("{thin}");
         println!("{:<w$} {}", "  Total repositories:", total);
         if !config.scoped_repos.is_empty() {
-            println!("{:<w$} {} of {total}", "  Scoped to:", config.scoped_repos.len());
+            println!(
+                "{:<w$} {} of {total}",
+                "  Scoped to:",
+                config.scoped_repos.len()
+            );
         }
 
         println!("{thin}");
         println!("  Metadata coverage:");
-        Self::print_coverage("description", total - no_description.len(), no_description.len(), &no_description, w);
-        Self::print_coverage("topics",      total - no_topics.len(),      no_topics.len(),      &no_topics,      w);
-        Self::print_coverage("license",     total - no_license.len(),     no_license.len(),     &no_license,     w);
+        Self::print_coverage(
+            "description",
+            total - no_description.len(),
+            no_description.len(),
+            &no_description,
+            w,
+        );
+        Self::print_coverage(
+            "topics",
+            total - no_topics.len(),
+            no_topics.len(),
+            &no_topics,
+            w,
+        );
+        Self::print_coverage(
+            "license",
+            total - no_license.len(),
+            no_license.len(),
+            &no_license,
+            w,
+        );
 
         if !wrong_branch.is_empty() {
             println!(
@@ -132,7 +167,10 @@ impl StatsCommand {
                 println!("      - {name}  [{branch}]");
             }
         } else {
-            println!("{:<w$} all {total} on '{required_branch}'", "  Correct branch:");
+            println!(
+                "{:<w$} all {total} on '{required_branch}'",
+                "  Correct branch:"
+            );
         }
 
         println!("{thin}");
@@ -173,17 +211,21 @@ impl StatsCommand {
             if self.scope_missing {
                 let names: Vec<&str> = non_compliant.iter().map(|(n, _)| *n).collect();
                 Self::rewrite_scoped_repos(config_path, &names)?;
-                println!("  scoped_repos updated in {config_path} ({} repos).", names.len());
-                println!("  Run: devopster repo audit   -- to see per-repo issues");
-                println!("       devopster topics align  -- to fix missing topics");
+                ui::success(&format!(
+                    "scoped_repos updated in {config_path} ({} repos).",
+                    names.len()
+                ));
+                ui::info("Run: devopster repo audit   -- to see per-repo issues");
+                ui::info("Run: devopster topics align -- to fix missing topics");
             } else {
-                println!("  Tip: run with --scope-missing to auto-update scoped_repos");
-                println!("  in {config_path} with the {n} repos above.",
-                    n = non_compliant.len());
+                ui::info("Tip: run with --scope-missing to auto-update scoped_repos.");
+                ui::info(&format!(
+                    "That will write the {} repos above into {config_path}.",
+                    non_compliant.len()
+                ));
             }
         }
 
-        println!("{sep}");
         Ok(())
     }
 
