@@ -1,11 +1,11 @@
 /// Browser-based login by delegating to each platform's own CLI tool.
 ///
 /// - GitHub       -> `gh auth login --web --hostname github.com`
-///                   then reads the token via `gh auth token`
+///   then reads the token via `gh auth token`
 /// - Azure DevOps -> `az login --allow-no-subscriptions`
-///                   then reads the token via `az account get-access-token`
+///   then reads the token via `az account get-access-token`
 /// - GitLab       -> `glab auth login`
-///                   then reads the token via `glab auth token`
+///   then reads the token via `glab auth token`
 ///
 /// No OAuth app registration required. Each platform CLI owns the browser
 /// redirect; devopster just reads the resulting token and caches it so the

@@ -87,9 +87,12 @@ pub fn remove_token(provider: &str) -> Result<()> {
 
 pub fn load_github_identity() -> Result<Option<GitHubIdentity>> {
     let store = load_store()?;
-    Ok(store
-        .github_identity
-        .or_else(|| store.tokens.get("github").and_then(|token| token.github_identity.clone())))
+    Ok(store.github_identity.or_else(|| {
+        store
+            .tokens
+            .get("github")
+            .and_then(|token| token.github_identity.clone())
+    }))
 }
 
 pub fn save_github_identity(identity: GitHubIdentity) -> Result<()> {

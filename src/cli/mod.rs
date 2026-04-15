@@ -106,10 +106,19 @@ async fn run_interactive_launcher(config_path: &str) -> Result<()> {
         ui::note("Direct commands still work any time, for example: devopster repo audit");
 
         let options = vec![
-            menu_item("Set up configuration", "Create or refresh devopster-config.yaml"),
+            menu_item(
+                "Set up configuration",
+                "Create or refresh devopster-config.yaml",
+            ),
             menu_item("Sign in", "Connect GitHub, Azure DevOps, or GitLab"),
-            menu_item("Manage repositories", "List, audit, fix, blueprint, or sync"),
-            menu_item("Generate catalog", "Export catalog.json for your organization"),
+            menu_item(
+                "Manage repositories",
+                "List, audit, fix, blueprint, or sync",
+            ),
+            menu_item(
+                "Generate catalog",
+                "Export catalog.json for your organization",
+            ),
             menu_item("Align topics", "Apply missing template topics"),
             menu_item("View statistics", "Check metadata coverage and compliance"),
             menu_item("Show help", "See the direct CLI command reference"),
@@ -120,20 +129,26 @@ async fn run_interactive_launcher(config_path: &str) -> Result<()> {
             0 => launch_init(config_path).await?,
             1 => launch_login().await?,
             2 => launch_repo(config_path).await?,
-            3 => run_command(
-                Commands::Catalog(catalog::CatalogCommand {
-                    action: catalog::CatalogAction::Generate(catalog::GenerateCatalogCommand {}),
-                }),
-                config_path,
-            )
-            .await?,
-            4 => run_command(
-                Commands::Topics(topics::TopicsCommand {
-                    action: topics::TopicsAction::Align(topics::AlignTopicsCommand {}),
-                }),
-                config_path,
-            )
-            .await?,
+            3 => {
+                run_command(
+                    Commands::Catalog(catalog::CatalogCommand {
+                        action: catalog::CatalogAction::Generate(
+                            catalog::GenerateCatalogCommand {},
+                        ),
+                    }),
+                    config_path,
+                )
+                .await?
+            }
+            4 => {
+                run_command(
+                    Commands::Topics(topics::TopicsCommand {
+                        action: topics::TopicsAction::Align(topics::AlignTopicsCommand {}),
+                    }),
+                    config_path,
+                )
+                .await?
+            }
             5 => launch_stats(config_path).await?,
             6 => print_help()?,
             _ => break,
@@ -156,22 +171,26 @@ async fn launch_init(config_path: &str) -> Result<()> {
         menu_item("Back", "Return to the main launcher"),
     ];
     match ui::select("Init", &options, 0)? {
-        0 => run_command(
-            Commands::Init(init::InitCommand {
-                output: config_path.to_string(),
-                no_login: false,
-            }),
-            config_path,
-        )
-        .await,
-        1 => run_command(
-            Commands::Init(init::InitCommand {
-                output: config_path.to_string(),
-                no_login: true,
-            }),
-            config_path,
-        )
-        .await,
+        0 => {
+            run_command(
+                Commands::Init(init::InitCommand {
+                    output: config_path.to_string(),
+                    no_login: false,
+                }),
+                config_path,
+            )
+            .await
+        }
+        1 => {
+            run_command(
+                Commands::Init(init::InitCommand {
+                    output: config_path.to_string(),
+                    no_login: true,
+                }),
+                config_path,
+            )
+            .await
+        }
         _ => Ok(()),
     }
 }
@@ -184,7 +203,10 @@ async fn launch_login() -> Result<()> {
         menu_item("Azure DevOps", "Sign in with the az CLI"),
         menu_item("GitLab", "Sign in with the glab CLI"),
         menu_item("All providers", "Run all sign-in flows one after another"),
-        menu_item("Login status", "Check whether providers are already signed in"),
+        menu_item(
+            "Login status",
+            "Check whether providers are already signed in",
+        ),
         menu_item("Logout", "Remove saved credentials for one provider"),
         menu_item("Back", "Return to the main launcher"),
     ];
@@ -237,11 +259,23 @@ async fn launch_repo(config_path: &str) -> Result<()> {
     ui::section("Repository actions");
     ui::note("Pick the task you want to perform across repositories.");
     let options = vec![
-        menu_item("List repositories", "Browse repositories, optionally by topic"),
-        menu_item("Audit repositories", "Find missing metadata or branch drift"),
+        menu_item(
+            "List repositories",
+            "Browse repositories, optionally by topic",
+        ),
+        menu_item(
+            "Audit repositories",
+            "Find missing metadata or branch drift",
+        ),
         menu_item("Fix repositories", "Interactively repair missing metadata"),
-        menu_item("Create from blueprint", "Provision a new repository from a template"),
-        menu_item("Sync shared files", "Push local or blueprint content to repositories"),
+        menu_item(
+            "Create from blueprint",
+            "Provision a new repository from a template",
+        ),
+        menu_item(
+            "Sync shared files",
+            "Push local or blueprint content to repositories",
+        ),
         menu_item("Back", "Return to the main launcher"),
     ];
 
@@ -286,7 +320,10 @@ async fn launch_repo(config_path: &str) -> Result<()> {
         4 => {
             let sync_options = vec![
                 menu_item("Sync local files", "Use a local folder such as .github"),
-                menu_item("Sync from blueprint", "Compare against the configured blueprint repo"),
+                menu_item(
+                    "Sync from blueprint",
+                    "Compare against the configured blueprint repo",
+                ),
             ];
             let sync_choice = ui::select("Sync mode", &sync_options, 0)?;
             let from_blueprint = sync_choice == 1;
@@ -329,10 +366,8 @@ async fn launch_repo(config_path: &str) -> Result<()> {
 async fn launch_stats(config_path: &str) -> Result<()> {
     ui::section("Statistics");
     ui::note("View overall metadata health for the configured organization.");
-    let scope_missing = ui::prompt_confirm(
-        "Write non-compliant repositories into scoped_repos?",
-        false,
-    )?;
+    let scope_missing =
+        ui::prompt_confirm("Write non-compliant repositories into scoped_repos?", false)?;
     run_command(
         Commands::Stats(stats::StatsCommand { scope_missing }),
         config_path,

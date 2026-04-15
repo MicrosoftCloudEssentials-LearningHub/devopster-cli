@@ -583,7 +583,7 @@ fn non_empty_lines(s: &str) -> Vec<String> {
 fn last_url_segment(url: &str) -> Result<String> {
     url.trim_end_matches('/')
         .split('/')
-        .last()
+        .next_back()
         .filter(|s| !s.is_empty())
         .map(|s| s.to_string())
         .context("could not extract name from URL")
