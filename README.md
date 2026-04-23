@@ -42,6 +42,19 @@ Last updated: 2026-03-25
 
 > This project is designed to run inside a container. Host-level development dependencies are intentionally minimal: install Docker once on the host, then run everything else in containers.
 
+### Primary local workflow (recommended)
+
+If you want local development with fully containerized tooling, use this one command from your host machine:
+
+```bash
+devopster dev-env
+```
+
+It opens the project container and runs:
+
+- `make bootstrap` (fetch, install, test)
+- `devopster setup` (guided onboarding)
+
 ### What `make setup` does
 
 | Tool | Where | How |
@@ -53,7 +66,7 @@ Last updated: 2026-03-25
 
 > If you want zero local installs, run this repo in GitHub Codespaces (or another cloud dev container runtime) so Docker and tooling are provided remotely.
 
-### Zero-local-install path (recommended for new developers)
+### Zero-local-install path (optional)
 
 1. Open the repository in GitHub.
 2. Click **Code** > **Codespaces** > **Create codespace on main**.
@@ -66,18 +79,39 @@ devopster setup
 
 This path needs only a browser and GitHub access.
 
+### Recommended: local editor + fully containerized tooling
+
+Use this path if you want to code locally (not in the browser) while still keeping all dev tools inside the container.
+
+1. Install Docker Desktop once.
+2. Install VS Code once.
+3. Install the Dev Containers extension in VS Code.
+4. Clone this repository locally.
+5. Open the folder in VS Code.
+6. Run Reopen in Container.
+7. Wait for post-create to finish (it runs make bootstrap automatically).
+8. Run the first-use onboarding command:
+
+```bash
+devopster setup
+```
+
+Result: code stays local in VS Code, while Rust, provider CLIs, build, and tests all run inside the dev container.
+
 ### VS Code Dev Container
 
 1. Clone the repository.
 2. Open it in VS Code.
 3. Reopen the folder in the Dev Container.
-4. The post-create step installs `devopster` inside the dev container.
+4. The post-create step runs make bootstrap and prepares the full toolchain in-container.
 
 ### Local Commands
 
 ```bash
-# First time on a new machine -- with Docker already installed/running,
-# this builds the image and drops you into the container shell:
+# Primary local onboarding path:
+devopster dev-env
+
+# Or open a container shell only:
 make setup
 
 # Inside the container:
@@ -100,7 +134,7 @@ This command is safe to re-run and performs:
 
 ## Commands Overview
 
-> After `make setup`, run `devopster` with no subcommand to open the interactive launcher. For most users, the only top-level command you need to remember is `setup`.
+> Run `devopster` with no subcommand to open the interactive launcher. For local containerized onboarding, use `devopster dev-env`.
 
 ### Interactive launcher
 
@@ -123,6 +157,7 @@ These are the direct commands most people need:
 
 | Command | Options / Variants | Purpose |
 |---|---|---|
+| `devopster dev-env` | - `--no-build`<br/>- `--no-onboarding`<br/>- `--image <tag>` | - Start local containerized developer environment from the Rust app<br/>- Reuse an existing image without rebuilding<br/>- Run bootstrap only and skip guided onboarding<br/>- Use a custom container image tag |
 | `devopster setup` | - `--login-all`<br/>- `--no-login`<br/>- `--output <path>` | - Run one-command onboarding (guided login + guided config)<br/>- Sign in to all providers first, then continue config setup<br/>- Skip provider sign-in and only run config setup<br/>- Write config to a custom path |
 | `devopster init` | - `--no-login` | - Create `devopster-config.yaml` and sign in to a provider<br/>- Create `devopster-config.yaml` only, skip the sign-in prompt |
 | `devopster login` | - `<github\|azure-devops\|gitlab>`<br/>- `all`<br/>- `status`<br/>- `logout <provider>` | - Sign in to that provider via browser (uses `gh`, `az`, or `glab` CLI)<br/>- Sign in to all three providers sequentially<br/>- Show authentication status for all providers<br/>- Remove stored credentials for a provider |
@@ -146,7 +181,7 @@ These commands still work directly when you want explicit CLI usage or scripting
 
 ```bash
 # 1. build the image and install devopster
-make setup
+devopster dev-env --no-onboarding
 
 # 2. open the launcher
 devopster

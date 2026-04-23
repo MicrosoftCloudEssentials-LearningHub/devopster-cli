@@ -1,4 +1,4 @@
-.PHONY: setup bootstrap build test lint fmt \
+.PHONY: setup local-dev bootstrap build test lint fmt \
         container-build container-test container-run \
         login-github login-azure login-gitlab auth-status \
         help
@@ -17,6 +17,10 @@ else
 	@echo "==> Detected Windows"
 	@powershell -ExecutionPolicy Bypass -File scripts\\setup.ps1
 endif
+
+## local-dev: Full local containerized onboarding (bootstrap + devopster setup)
+local-dev:
+	$(MAKE) container-run ARGS='bash -lc "make bootstrap && devopster setup"'
 
 ## bootstrap: In-container first-run bootstrap (install CLI and run tests)
 bootstrap:

@@ -1,4 +1,5 @@
 pub mod catalog;
+pub mod dev_env;
 pub mod init;
 pub mod login;
 pub mod repo;
@@ -27,6 +28,7 @@ Run without a command to open the interactive launcher.
 
 Commands:
 {tab}login                         Authentication commands
+{tab}dev-env                       Launch local containerized developer env
 {tab}setup                         One-command developer setup
 {tab}init                          Create devopster-config.yaml and sign in
 
@@ -58,6 +60,8 @@ pub struct Cli {
 pub enum Commands {
     /// Authenticate with a provider via browser sign-in
     Login(login::LoginCommand),
+    /// Launch local containerized developer environment from devopster
+    DevEnv(dev_env::DevEnvCommand),
     /// Run developer setup (login + guided config) in one command
     Setup(setup::SetupCommand),
     /// Create devopster-config.yaml interactively and optionally sign in
@@ -92,6 +96,7 @@ pub async fn run() -> Result<()> {
 async fn run_command(command: Commands, config_path: &str) -> Result<()> {
     match command {
         Commands::Login(command) => command.run().await,
+        Commands::DevEnv(command) => command.run().await,
         Commands::Setup(command) => command.run(config_path).await,
         Commands::Init(command) => command.run(config_path).await,
         Commands::Repo(command) => command.run(config_path).await,
@@ -111,6 +116,10 @@ async fn run_interactive_launcher(config_path: &str) -> Result<()> {
         ui::note("Direct commands still work any time, for example: devopster repo audit");
 
         let options = vec![
+            menu_item(
+                "Start local developer environment",
+                "Build and run containerized setup from devopster",
+            ),
             menu_item(
                 "Full developer setup",
                 "Run login + config setup in one guided flow",
@@ -137,6 +146,17 @@ async fn run_interactive_launcher(config_path: &str) -> Result<()> {
         match ui::select("Choose an action", &options, 0)? {
             0 => {
                 run_command(
+                    Commands::DevEnv(dev_env::DevEnvCommand {
+                        image: "devopster-cli-dev".to_string(),
+                        no_build: false,
+                        no_onboarding: false,
+                    }),
+                    config_path,
+                )
+                .await?
+            }
+            1 => {
+                run_command(
                     Commands::Setup(setup::SetupCommand {
                         output: config_path.to_string(),
                         login_all: false,
@@ -146,10 +166,10 @@ async fn run_interactive_launcher(config_path: &str) -> Result<()> {
                 )
                 .await?
             }
-            1 => launch_init(config_path).await?,
-            2 => launch_login().await?,
-            3 => launch_repo(config_path).await?,
-            4 => {
+            2 => launch_init(config_path).await?,
+            3 => launch_login().await?,
+            4 => launch_repo(config_path).await?,
+            5 => {
                 run_command(
                     Commands::Catalog(catalog::CatalogCommand {
                         action: catalog::CatalogAction::Generate(
@@ -160,7 +180,7 @@ async fn run_interactive_launcher(config_path: &str) -> Result<()> {
                 )
                 .await?
             }
-            5 => {
+            6 => {
                 run_command(
                     Commands::Topics(topics::TopicsCommand {
                         action: topics::TopicsAction::Align(topics::AlignTopicsCommand {}),
@@ -169,8 +189,8 @@ async fn run_interactive_launcher(config_path: &str) -> Result<()> {
                 )
                 .await?
             }
-            6 => launch_stats(config_path).await?,
-            7 => print_help()?,
+            7 => launch_stats(config_path).await?,
+            8 => print_help()?,
             _ => break,
         }
 
