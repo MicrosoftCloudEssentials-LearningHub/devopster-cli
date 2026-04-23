@@ -262,37 +262,37 @@ mod tests {
         assert!(config.templates.is_empty());
     }
 
-        #[test]
-        fn parses_multi_provider_targets() {
-                let yaml = "
+    #[test]
+    fn parses_multi_provider_targets() {
+        let yaml = "
 provider: github
 organization: fallback-org
 providers:
-    - provider: github
-        organization: org-a
-    - provider: gitlab
-        organization: group-b
-    - provider: azure_devops
-        organization: org-c
-        project: platform
+  - provider: github
+    organization: org-a
+  - provider: gitlab
+    organization: group-b
+  - provider: azure_devops
+    organization: org-c
+    project: platform
 catalog:
-    output_path: out/catalog.json
+  output_path: out/catalog.json
 github:
-    api_url: https://api.github.com
-    token_env: GITHUB_TOKEN
+  api_url: https://api.github.com
+  token_env: GITHUB_TOKEN
 azure_devops:
-    organization_url: https://dev.azure.com/myorg
-    project: default-project
-    token_env: AZDO_TOKEN
+  organization_url: https://dev.azure.com/myorg
+  project: default-project
+  token_env: AZDO_TOKEN
 gitlab:
-    api_url: https://gitlab.com/api/v4
-    token_env: GITLAB_TOKEN
+  api_url: https://gitlab.com/api/v4
+  token_env: GITLAB_TOKEN
 ";
 
-                let config: AppConfig = serde_yaml::from_str(yaml).unwrap();
-                assert_eq!(config.providers.len(), 3);
-                assert_eq!(config.providers[0].organization, "org-a");
-                assert!(matches!(config.providers[1].provider, ProviderKind::GitLab));
-                assert_eq!(config.providers[2].project.as_deref(), Some("platform"));
-        }
+        let config: AppConfig = serde_yaml::from_str(yaml).unwrap();
+        assert_eq!(config.providers.len(), 3);
+        assert_eq!(config.providers[0].organization, "org-a");
+        assert!(matches!(config.providers[1].provider, ProviderKind::GitLab));
+        assert_eq!(config.providers[2].project.as_deref(), Some("platform"));
+    }
 }
