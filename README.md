@@ -42,6 +42,26 @@ Last updated: 2026-03-25
 
 > This project is designed to run inside a container. Host-level development dependencies are intentionally minimal: install Docker once on the host, then run everything else in containers.
 
+## Release Automation
+
+This repository now includes automated build artifacts on GitHub Actions:
+
+- On every merge to `main`: builds downloadable CLI artifacts for Linux, Windows, and macOS.
+- On version tags like `v1.0.0`: publishes those artifacts to a GitHub Release.
+
+Current downloadable outputs:
+
+- `devopster-linux-x86_64.tar.gz`
+- `devopster-windows-x86_64.zip` (contains `.exe`)
+- `devopster-macos-x86_64.tar.gz`
+- `devopster-macos.dmg`
+
+Desktop GUI installer packaging is planned as a next phase. Today, GUI mode is the interactive terminal launcher (`devopster gui`).
+
+Branding asset for upcoming desktop packaging:
+
+- Icon source (red lobster on blue background): `assets/devopster-icon.svg`
+
 ### Primary local workflow (recommended)
 
 If you want local development with fully containerized tooling, use this one command from your host machine:
