@@ -100,6 +100,7 @@ pub async fn run() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
+        Some(Commands::Gui) => run_interactive_launcher(&cli.config).await,
         Some(command) => run_command(command, &cli.config).await,
         None if io::stdin().is_terminal() && io::stdout().is_terminal() => {
             run_interactive_launcher(&cli.config).await
@@ -115,7 +116,7 @@ pub async fn run() -> Result<()> {
 
 async fn run_command(command: Commands, config_path: &str) -> Result<()> {
     match command {
-        Commands::Gui => run_interactive_launcher(config_path).await,
+        Commands::Gui => Ok(()),
         Commands::Diagnostics(command) => command.run().await,
         Commands::Login(command) => command.run().await,
         Commands::Config(command) => command.run().await,

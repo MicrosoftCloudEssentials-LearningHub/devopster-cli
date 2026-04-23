@@ -27,10 +27,9 @@ pub fn ensure_docker_ready() -> Result<()> {
 }
 
 pub fn build_dev_image(image: &str) -> Result<()> {
-    run_checked(
-        Command::new("docker").args(["build", "--target", "dev", "-t", image, "."]),
-        "docker build failed",
-    )
+    let mut command = Command::new("docker");
+    command.args(["build", "--target", "dev", "-t", image, "."]);
+    run_checked(command, "docker build failed")
 }
 
 pub fn run_in_dev_container(image: &str, command: &str, interactive: bool) -> Result<()> {
