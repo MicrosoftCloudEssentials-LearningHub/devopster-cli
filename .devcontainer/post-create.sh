@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "[post-create] Preparing in-container Rust environment..."
-cargo fetch
-cargo install --path . --locked --force
+echo "[post-create] Running in-container bootstrap..."
+make bootstrap

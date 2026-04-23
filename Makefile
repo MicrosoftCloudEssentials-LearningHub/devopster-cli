@@ -1,4 +1,4 @@
-.PHONY: setup build test lint fmt \
+.PHONY: setup bootstrap build test lint fmt \
         container-build container-test container-run \
         login-github login-azure login-gitlab auth-status \
         help
@@ -17,6 +17,12 @@ else
 	@echo "==> Detected Windows"
 	@powershell -ExecutionPolicy Bypass -File scripts\\setup.ps1
 endif
+
+## bootstrap: In-container first-run bootstrap (install CLI and run tests)
+bootstrap:
+	cargo fetch
+	cargo install --path . --locked --force
+	cargo test
 
 ## build: Compile the devopster binary
 build:

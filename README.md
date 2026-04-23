@@ -53,6 +53,19 @@ Last updated: 2026-03-25
 
 > If you want zero local installs, run this repo in GitHub Codespaces (or another cloud dev container runtime) so Docker and tooling are provided remotely.
 
+### Zero-local-install path (recommended for new developers)
+
+1. Open the repository in GitHub.
+2. Click **Code** > **Codespaces** > **Create codespace on main**.
+3. Wait for the dev container to finish bootstrapping (post-create runs `make bootstrap`).
+4. Start onboarding:
+
+```bash
+devopster setup
+```
+
+This path needs only a browser and GitHub access.
+
 ### VS Code Dev Container
 
 1. Clone the repository.
@@ -70,6 +83,18 @@ make setup
 # Inside the container:
 devopster
 ```
+
+### In-container bootstrap command
+
+```bash
+make bootstrap
+```
+
+This command is safe to re-run and performs:
+
+- dependency fetch
+- local install of the `devopster` binary
+- full test run
 
 > To reopen the container shell after exiting, run `make setup` again or `make container-run`.
 
