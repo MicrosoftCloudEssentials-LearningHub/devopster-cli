@@ -1111,19 +1111,35 @@
           });
         }
 
-        fetch('https://api.github.com/repos/Cloud2BR/devopster-cli/releases?per_page=20')
-          .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('Release API failed')); })
-          .then(function (releases) {
-            var rel = (releases || []).find(function (x) { return !x.draft && Array.isArray(x.assets) && x.assets.length > 0; });
-            if (!rel) throw new Error('No published releases with assets found');
-            if (statusEl) {
-              statusEl.innerHTML = 'Showing files from <code>' + rel.tag_name + '</code>.';
-            }
+        function applyRelease(rel) {
+          if (!rel || !Array.isArray(rel.assets) || !rel.assets.length) {
+            throw new Error('No published releases with assets found');
+          }
+          if (statusEl) {
+            statusEl.innerHTML = 'Showing files from <code>' + rel.tag_name + '</code>.';
+          }
 
-            var assets = rel.assets || [];
-            renderPlatform('macos', pickAssets(assets, 'macos'));
-            renderPlatform('windows', pickAssets(assets, 'windows'));
-            renderPlatform('linux', pickAssets(assets, 'linux'));
+          var assets = rel.assets || [];
+          renderPlatform('macos', pickAssets(assets, 'macos'));
+          renderPlatform('windows', pickAssets(assets, 'windows'));
+          renderPlatform('linux', pickAssets(assets, 'linux'));
+        }
+
+        // Prefer a local JSON snapshot generated during Pages deploy.
+        fetch('assets/releases/latest.json', { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('Local snapshot missing')); })
+          .then(function (rel) {
+            if (!rel || !rel.tag_name) throw new Error('Local snapshot empty');
+            applyRelease(rel);
+          })
+          .catch(function () {
+            // Fallback to live API in case snapshot is unavailable.
+            return fetch('https://api.github.com/repos/Cloud2BR/devopster-cli/releases?per_page=20', { cache: 'no-store' })
+              .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('Release API failed')); })
+              .then(function (releases) {
+                var rel = (releases || []).find(function (x) { return !x.draft && Array.isArray(x.assets) && x.assets.length > 0; });
+                applyRelease(rel);
+              });
           })
           .catch(function () {
             if (statusEl) {

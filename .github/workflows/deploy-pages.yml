@@ -42,6 +42,20 @@ jobs:
           cp -R docs/. _site/
           cp -R assets/. _site/assets/
 
+      - name: Snapshot latest release assets for site
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p _site/assets/releases
+          API="https://api.github.com/repos/${{ github.repository }}/releases?per_page=20"
+          curl -sS \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$API" \
+          | jq 'map(select((.draft | not) and (.assets | length > 0))) | .[0] // {}' \
+          > _site/assets/releases/latest.json
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
