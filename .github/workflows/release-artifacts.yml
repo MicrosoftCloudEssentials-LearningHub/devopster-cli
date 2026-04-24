@@ -24,6 +24,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Ensure icon asset exists
+        run: |
+          if [ ! -f assets/devopster-icon.png ]; then
+            echo "assets/devopster-icon.png is required for release packaging"
+            exit 1
+          fi
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -33,22 +40,43 @@ jobs:
       - name: Package Linux artifact
         if: runner.os == 'Linux'
         run: |
-          mkdir -p dist
-          tar -czf dist/devopster-linux-x86_64.tar.gz -C target/release devopster
+          mkdir -p dist/linux-package
+          cp target/release/devopster dist/linux-package/
+          cp assets/devopster-icon.png dist/linux-package/
+          tar -czf dist/devopster-linux-x86_64.tar.gz -C dist/linux-package devopster devopster-icon.png
 
       - name: Package Windows artifact
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Compress-Archive -Path target/release/devopster.exe -DestinationPath dist/devopster-windows-x86_64.zip -Force
+          New-Item -ItemType Directory -Force -Path dist/windows-package | Out-Null
+          Copy-Item target/release/devopster.exe dist/windows-package/devopster.exe
+          Copy-Item assets/devopster-icon.png dist/windows-package/devopster-icon.png
+          Compress-Archive -Path dist/windows-package/* -DestinationPath dist/devopster-windows-x86_64.zip -Force
 
       - name: Package macOS artifacts
         if: runner.os == 'macOS'
         run: |
           mkdir -p dist/devopster-cli
+          mkdir -p dist/iconset
           cp target/release/devopster dist/devopster-cli/
-          tar -czf dist/devopster-macos-x86_64.tar.gz -C target/release devopster
+          cp assets/devopster-icon.png dist/devopster-cli/
+
+          sips -z 16 16 assets/devopster-icon.png --out dist/iconset/icon_16x16.png
+          sips -z 32 32 assets/devopster-icon.png --out dist/iconset/icon_16x16@2x.png
+          sips -z 32 32 assets/devopster-icon.png --out dist/iconset/icon_32x32.png
+          sips -z 64 64 assets/devopster-icon.png --out dist/iconset/icon_32x32@2x.png
+          sips -z 128 128 assets/devopster-icon.png --out dist/iconset/icon_128x128.png
+          sips -z 256 256 assets/devopster-icon.png --out dist/iconset/icon_128x128@2x.png
+          sips -z 256 256 assets/devopster-icon.png --out dist/iconset/icon_256x256.png
+          sips -z 512 512 assets/devopster-icon.png --out dist/iconset/icon_256x256@2x.png
+          sips -z 512 512 assets/devopster-icon.png --out dist/iconset/icon_512x512.png
+          cp assets/devopster-icon.png dist/iconset/icon_512x512@2x.png
+          iconutil -c icns dist/iconset -o dist/devopster.icns
+          cp dist/devopster.icns dist/devopster-cli/
+
+          tar -czf dist/devopster-macos-x86_64.tar.gz -C dist/devopster-cli devopster devopster-icon.png devopster.icns
           hdiutil create -volname devopster-cli -srcfolder dist/devopster-cli -ov -format UDZO dist/devopster-macos.dmg
 
       - name: Upload build artifacts

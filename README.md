@@ -60,7 +60,7 @@ Desktop GUI installer packaging is planned as a next phase. Today, GUI mode is t
 
 Branding asset for upcoming desktop packaging:
 
-- Icon source (red lobster on blue background): `assets/devopster-icon.svg`
+- Icon source (red lobster on blue background): `assets/devopster-icon.png`
 
 ### Primary local workflow (recommended)
 
