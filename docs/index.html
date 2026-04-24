@@ -985,32 +985,52 @@
 
     <script>
       (function () {
-        document.addEventListener('click', function (ev) {
-          var btn = ev.target.closest('.copy-btn');
-          if (!btn) return;
-          var text = btn.getAttribute('data-copy') || '';
-          var done = function () {
-            var prev = btn.textContent;
-            btn.textContent = 'Copied';
-            btn.classList.add('copied');
-            setTimeout(function () { btn.textContent = prev; btn.classList.remove('copied'); }, 1600);
-          };
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(done).catch(function () {
-              fallback(text); done();
+        var buttons = document.querySelectorAll('.copy-btn');
+        buttons.forEach(function (btn) {
+          btn.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+
+            var text = btn.getAttribute('data-copy') || '';
+            if (!text) {
+              var code = btn.parentElement && btn.parentElement.querySelector('code');
+              text = code ? code.textContent : '';
+            }
+            if (!text) return;
+
+            copyText(text).then(function () {
+              var prev = btn.textContent;
+              btn.textContent = 'Copied';
+              btn.classList.add('copied');
+              setTimeout(function () {
+                btn.textContent = prev;
+                btn.classList.remove('copied');
+              }, 1600);
             });
-          } else {
-            fallback(text); done();
-          }
+          });
         });
+
+        function copyText(text) {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text).catch(function () {
+              fallback(text);
+            });
+          }
+          fallback(text);
+          return Promise.resolve();
+        }
+
         function fallback(text) {
           var ta = document.createElement('textarea');
           ta.value = text;
           ta.setAttribute('readonly', '');
-          ta.style.position = 'absolute';
+          ta.style.position = 'fixed';
+          ta.style.top = '0';
           ta.style.left = '-9999px';
+          ta.style.opacity = '0';
           document.body.appendChild(ta);
           ta.select();
+          ta.setSelectionRange(0, ta.value.length);
           try { document.execCommand('copy'); } catch (e) {}
           document.body.removeChild(ta);
         }
