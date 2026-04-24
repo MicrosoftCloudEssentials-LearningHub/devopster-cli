@@ -1,8 +1,9 @@
 name: Desktop App (Tauri)
 
-# Manual + tag-driven builds for the DevOpster desktop shell.
-# Kept separate from release-artifacts.yml so a Tauri failure cannot
-# block CLI releases on production (main).
+# Builds the DevOpster desktop app for macOS (Intel + Apple Silicon),
+# Windows x64, and Linux x64. Runs on manual dispatch and on `desktop-v*`
+# tags. Kept independent from release-artifacts.yml so a Tauri failure
+# never blocks CLI releases.
 
 on:
   workflow_dispatch:
@@ -15,21 +16,24 @@ permissions:
 
 jobs:
   build:
-    name: ${{ matrix.os }}
+    name: ${{ matrix.label }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
-            target_triple: aarch64-apple-darwin
-            sidecar_name: devopster
-          - os: ubuntu-latest
-            target_triple: x86_64-unknown-linux-gnu
-            sidecar_name: devopster
-          - os: windows-latest
-            target_triple: x86_64-pc-windows-msvc
-            sidecar_name: devopster.exe
+          - label: macos-arm64
+            os: macos-14
+            target: aarch64-apple-darwin
+          - label: macos-x64
+            os: macos-13
+            target: x86_64-apple-darwin
+          - label: linux-x64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - label: windows-x64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
 
     steps:
       - name: Checkout
@@ -37,6 +41,13 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Pillow (icon ICO generation)
+        if: runner.os != 'Linux'
+        shell: bash
+        run: pip3 install --quiet pillow
 
       - name: Linux system deps
         if: runner.os == 'Linux'
@@ -51,7 +62,8 @@ jobs:
             build-essential \
             curl \
             wget \
-            file
+            file \
+            python3-pil
 
       - name: Cache cargo
         uses: actions/cache@v4
@@ -61,48 +73,52 @@ jobs:
             ~/.cargo/git
             target
             src-tauri/target
-          key: tauri-${{ matrix.os }}-${{ hashFiles('Cargo.lock', 'src-tauri/Cargo.toml') }}
+          key: tauri-${{ matrix.label }}-${{ hashFiles('Cargo.lock', 'src-tauri/Cargo.toml') }}
 
-      - name: Build devopster CLI (release)
-        run: cargo build --release --bin devopster
+      - name: Build devopster CLI for target
+        run: cargo build --release --target ${{ matrix.target }} --bin devopster
 
       - name: Stage sidecar binary
         shell: bash
         run: |
           mkdir -p src-tauri/binaries
           if [ "${{ runner.os }}" = "Windows" ]; then
-            cp target/release/devopster.exe "src-tauri/binaries/devopster-${{ matrix.target_triple }}.exe"
+            cp "target/${{ matrix.target }}/release/devopster.exe" "src-tauri/binaries/devopster-${{ matrix.target }}.exe"
           else
-            cp target/release/devopster "src-tauri/binaries/devopster-${{ matrix.target_triple }}"
+            cp "target/${{ matrix.target }}/release/devopster" "src-tauri/binaries/devopster-${{ matrix.target }}"
+            chmod +x "src-tauri/binaries/devopster-${{ matrix.target }}"
           fi
           ls -la src-tauri/binaries
 
       - name: Install Tauri CLI
         run: cargo install tauri-cli --locked --version "^2"
 
-      - name: Generate icons
+      - name: Generate platform icons
         run: cargo tauri icon assets/devopster-icon.png
 
       - name: Build Tauri bundle
-        run: cargo tauri build
+        run: cargo tauri build --target ${{ matrix.target }}
 
       - name: Collect bundles
         if: always()
         shell: bash
         run: |
           mkdir -p dist
-          find src-tauri/target/release/bundle -type f \
-            \( -name "*.dmg" -o -name "*.app.tar.gz" \
-               -o -name "*.msi" -o -name "*.exe" \
-               -o -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm" \) \
-            -exec cp {} dist/ \; || true
+          BUNDLE_ROOT="src-tauri/target/${{ matrix.target }}/release/bundle"
+          if [ -d "$BUNDLE_ROOT" ]; then
+            find "$BUNDLE_ROOT" -type f \
+              \( -name "*.dmg" -o -name "*.app.tar.gz" \
+                 -o -name "*.msi" -o -name "*-setup.exe" \
+                 -o -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm" \) \
+              -exec cp {} dist/ \; || true
+          fi
           ls -la dist || true
 
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: devopster-desktop-${{ matrix.os }}
+          name: devopster-desktop-${{ matrix.label }}
           path: dist/*
           if-no-files-found: warn
 
@@ -116,8 +132,17 @@ jobs:
         with:
           path: artifacts
 
+      - name: Flatten artifacts
+        run: |
+          mkdir -p flat
+          find artifacts -type f -exec cp {} flat/ \;
+          ls -la flat
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/**/*
+          files: flat/*
           generate_release_notes: true
+          name: DevOpster Desktop ${{ github.ref_name }}
+          draft: false
+          prerelease: false

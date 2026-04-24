@@ -1,52 +1,60 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DevOpster</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <header class="topbar">
-    <div class="brand">
-      <img src="logo.png" alt="DevOpster" />
-      <div>
-        <h1>DevOpster</h1>
-        <p>DevOps control plane · desktop preview</p>
-      </div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DevOpster</title>
+    <link rel="icon" href="logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="logo.png" alt="" />
+          <div>
+            <div class="brand-name">DevOpster</div>
+            <div class="brand-tag">Desktop</div>
+          </div>
+        </div>
+
+        <nav id="nav">
+          <button class="nav" data-route="dashboard"><span>🏠</span> Dashboard</button>
+          <button class="nav" data-route="diagnostics"><span>🩺</span> Diagnostics</button>
+          <button class="nav" data-route="inventory"><span>📦</span> Inventory</button>
+          <button class="nav" data-route="audit"><span>🛡️</span> Repo audit</button>
+          <button class="nav" data-route="stats"><span>📊</span> Stats</button>
+          <button class="nav" data-route="catalog"><span>📚</span> Catalog</button>
+          <button class="nav" data-route="topics"><span>🏷️</span> Topics</button>
+          <button class="nav" data-route="setup"><span>⚙️</span> Setup</button>
+          <button class="nav" data-route="config"><span>📝</span> Config</button>
+          <button class="nav" data-route="console"><span>🖥️</span> Console</button>
+        </nav>
+
+        <div class="sidebar-foot">
+          <div id="env-os">os: …</div>
+          <div id="env-sidecar">sidecar: …</div>
+          <a href="https://cloud2br.github.io/devopster-cli/" target="_blank" rel="noopener noreferrer">Project site ↗</a>
+        </div>
+      </aside>
+
+      <main id="main">
+        <header class="topbar">
+          <div>
+            <div class="title" id="route-title">Dashboard</div>
+            <div class="subtitle" id="route-sub">Overview of your DevOpster environment.</div>
+          </div>
+          <div class="topbar-actions" id="topbar-actions"></div>
+        </header>
+        <section id="view"></section>
+      </main>
     </div>
-    <div class="status" id="status">Ready</div>
-  </header>
 
-  <main>
-    <aside class="sidebar">
-      <h2>Commands</h2>
-      <button class="cmd" data-args='["diagnostics"]'>Diagnostics</button>
-      <button class="cmd" data-args='["--version"]'>Version</button>
-      <button class="cmd" data-args='["inventory"]'>Inventory</button>
-      <button class="cmd" data-args='["stats"]'>Stats</button>
-      <button class="cmd" data-args='["config","show"]'>Config: show</button>
-      <button class="cmd" data-args='["setup"]'>Setup</button>
+    <div id="toast" class="toast"></div>
 
-      <h2>Custom</h2>
-      <input id="custom" type="text" placeholder="repo audit --org myorg" autocomplete="off" />
-      <button id="run-custom">Run</button>
-
-      <button id="clear">Clear output</button>
-    </aside>
-
-    <section class="output">
-      <div class="bar">
-        <span id="cmd-label">No command run yet.</span>
-        <span id="exit"></span>
-      </div>
-      <pre id="log" aria-live="polite"></pre>
-    </section>
-  </main>
-
-  <script type="module" src="app.js"></script>
-</body>
+    <script type="module" src="app.js"></script>
+  </body>
 </html>
