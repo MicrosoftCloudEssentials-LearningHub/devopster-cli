@@ -814,7 +814,9 @@
               <a class="download-label" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster Windows download">↓ Download for Windows</a>
               <ol class="platform-steps">
                 <li class="platform-note"><strong>Step 1:</strong> Download the latest Windows release and extract the package.</li>
-                <li class="platform-note"><strong>Step 2:</strong> Run <code>DevOpster-GUI.cmd</code> (or <code>devopster.exe</code> directly).</li>
+                <li class="platform-note"><strong>Step 2:</strong> Run the launcher from PowerShell:
+                  <div class="copy-cmd"><code>Unblock-File .\DevOpster-GUI.cmd; .\DevOpster-GUI.cmd</code><button type="button" class="copy-btn" data-copy="Unblock-File .\DevOpster-GUI.cmd; .\DevOpster-GUI.cmd">Copy</button></div>
+                </li>
                 <li class="platform-note"><strong>Step 3:</strong> If SmartScreen appears, click <strong>More info</strong> then <strong>Run anyway</strong>.</li>
               </ol>
             </article>
@@ -835,7 +837,9 @@
               <a class="download-label" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster Linux download">↓ Download for Linux</a>
               <ol class="platform-steps">
                 <li class="platform-note"><strong>Step 1:</strong> Download the Linux package you prefer (<code>.deb</code>, <code>.AppImage</code>, or <code>.rpm</code>).</li>
-                <li class="platform-note"><strong>Step 2:</strong> Install and launch DevOpster from your app menu or terminal.</li>
+                <li class="platform-note"><strong>Step 2:</strong> AppImage quick run:
+                  <div class="copy-cmd"><code>chmod +x DevOpster_*.AppImage &amp;&amp; ./DevOpster_*.AppImage</code><button type="button" class="copy-btn" data-copy="chmod +x DevOpster_*.AppImage && ./DevOpster_*.AppImage">Copy</button></div>
+                </li>
                 <li class="platform-note"><strong>Step 3:</strong> Desktop integration includes <code>.desktop</code> and AppStream metadata in release artifacts.</li>
               </ol>
             </article>
