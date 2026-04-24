@@ -107,7 +107,7 @@ jobs:
         run: cargo tauri build --target ${{ matrix.target }}
 
       - name: Import Apple signing certificate
-        if: runner.os == 'macOS' && secrets.APPLE_SIGNING_CERT_B64 != '' && secrets.APPLE_SIGNING_CERT_PASSWORD != '' && secrets.APPLE_SIGNING_IDENTITY != ''
+        if: runner.os == 'macOS'
         shell: bash
         env:
           APPLE_SIGNING_CERT_B64: ${{ secrets.APPLE_SIGNING_CERT_B64 }}
@@ -115,6 +115,10 @@ jobs:
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
           set -euo pipefail
+          if [ -z "${APPLE_SIGNING_CERT_B64:-}" ] || [ -z "${APPLE_SIGNING_CERT_PASSWORD:-}" ]; then
+            echo "Apple signing cert secrets are not set; skipping Developer ID import."
+            exit 0
+          fi
           KEYCHAIN_PASSWORD="${KEYCHAIN_PASSWORD:-temp-keychain-pass}"
           echo "$APPLE_SIGNING_CERT_B64" | base64 --decode > signing-cert.p12
           security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
@@ -125,12 +129,16 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" build.keychain
 
       - name: Sign macOS app and DMG (Developer ID)
-        if: runner.os == 'macOS' && secrets.APPLE_SIGNING_CERT_B64 != '' && secrets.APPLE_SIGNING_CERT_PASSWORD != '' && secrets.APPLE_SIGNING_IDENTITY != ''
+        if: runner.os == 'macOS'
         shell: bash
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
           set -euo pipefail
+          if [ -z "${APPLE_SIGNING_IDENTITY:-}" ]; then
+            echo "APPLE_SIGNING_IDENTITY is not set; skipping Developer ID signing."
+            exit 0
+          fi
           BUNDLE_ROOT="src-tauri/target/${{ matrix.target }}/release/bundle"
           if [ -d "$BUNDLE_ROOT/macos" ]; then
             for app in "$BUNDLE_ROOT/macos"/*.app; do
@@ -149,7 +157,7 @@ jobs:
           fi
 
       - name: Notarize and staple DMG
-        if: runner.os == 'macOS' && secrets.APPLE_SIGNING_CERT_B64 != '' && secrets.APPLE_SIGNING_CERT_PASSWORD != '' && secrets.APPLE_SIGNING_IDENTITY != '' && secrets.APPLE_ID != '' && secrets.APPLE_TEAM_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != ''
+        if: runner.os == 'macOS'
         shell: bash
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -157,6 +165,10 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
         run: |
           set -euo pipefail
+          if [ -z "${APPLE_ID:-}" ] || [ -z "${APPLE_TEAM_ID:-}" ] || [ -z "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]; then
+            echo "Apple notarization secrets are not set; skipping notarization."
+            exit 0
+          fi
           BUNDLE_ROOT="src-tauri/target/${{ matrix.target }}/release/bundle/dmg"
           if [ -d "$BUNDLE_ROOT" ]; then
             for dmg in "$BUNDLE_ROOT"/*.dmg; do
@@ -173,9 +185,17 @@ jobs:
           fi
 
       - name: Ad-hoc codesign macOS bundle
-        if: runner.os == 'macOS' && (secrets.APPLE_SIGNING_CERT_B64 == '' || secrets.APPLE_SIGNING_CERT_PASSWORD == '' || secrets.APPLE_SIGNING_IDENTITY == '')
+        if: runner.os == 'macOS'
         shell: bash
+        env:
+          APPLE_SIGNING_CERT_B64: ${{ secrets.APPLE_SIGNING_CERT_B64 }}
+          APPLE_SIGNING_CERT_PASSWORD: ${{ secrets.APPLE_SIGNING_CERT_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
+          if [ -n "${APPLE_SIGNING_CERT_B64:-}" ] && [ -n "${APPLE_SIGNING_CERT_PASSWORD:-}" ] && [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
+            echo "Developer ID signing is configured; skipping ad-hoc codesign fallback."
+            exit 0
+          fi
           # Apple Silicon and modern Intel macOS refuse to launch unsigned
           # apps with the cryptic "DevOpster.app is damaged" alert. An ad-hoc
           # signature (sign identity "-") satisfies the loader so the app
@@ -264,7 +284,6 @@ jobs:
         run: cargo tauri build --target x86_64-apple-darwin
 
       - name: Import Apple signing certificate
-        if: secrets.APPLE_SIGNING_CERT_B64 != '' && secrets.APPLE_SIGNING_CERT_PASSWORD != '' && secrets.APPLE_SIGNING_IDENTITY != ''
         shell: bash
         env:
           APPLE_SIGNING_CERT_B64: ${{ secrets.APPLE_SIGNING_CERT_B64 }}
@@ -272,6 +291,10 @@ jobs:
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
           set -euo pipefail
+          if [ -z "${APPLE_SIGNING_CERT_B64:-}" ] || [ -z "${APPLE_SIGNING_CERT_PASSWORD:-}" ]; then
+            echo "Apple signing cert secrets are not set; skipping Developer ID import."
+            exit 0
+          fi
           KEYCHAIN_PASSWORD="${KEYCHAIN_PASSWORD:-temp-keychain-pass}"
           echo "$APPLE_SIGNING_CERT_B64" | base64 --decode > signing-cert.p12
           security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
@@ -282,12 +305,15 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" build.keychain
 
       - name: Sign macOS app and DMG (Developer ID)
-        if: secrets.APPLE_SIGNING_CERT_B64 != '' && secrets.APPLE_SIGNING_CERT_PASSWORD != '' && secrets.APPLE_SIGNING_IDENTITY != ''
         shell: bash
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
           set -euo pipefail
+          if [ -z "${APPLE_SIGNING_IDENTITY:-}" ]; then
+            echo "APPLE_SIGNING_IDENTITY is not set; skipping Developer ID signing."
+            exit 0
+          fi
           BUNDLE_ROOT="src-tauri/target/x86_64-apple-darwin/release/bundle"
           if [ -d "$BUNDLE_ROOT/macos" ]; then
             for app in "$BUNDLE_ROOT/macos"/*.app; do
@@ -304,7 +330,6 @@ jobs:
           fi
 
       - name: Notarize and staple DMG
-        if: secrets.APPLE_SIGNING_CERT_B64 != '' && secrets.APPLE_SIGNING_CERT_PASSWORD != '' && secrets.APPLE_SIGNING_IDENTITY != '' && secrets.APPLE_ID != '' && secrets.APPLE_TEAM_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != ''
         shell: bash
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -312,6 +337,10 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
         run: |
           set -euo pipefail
+          if [ -z "${APPLE_ID:-}" ] || [ -z "${APPLE_TEAM_ID:-}" ] || [ -z "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]; then
+            echo "Apple notarization secrets are not set; skipping notarization."
+            exit 0
+          fi
           BUNDLE_ROOT="src-tauri/target/x86_64-apple-darwin/release/bundle/dmg"
           if [ -d "$BUNDLE_ROOT" ]; then
             for dmg in "$BUNDLE_ROOT"/*.dmg; do
@@ -327,9 +356,16 @@ jobs:
           fi
 
       - name: Ad-hoc codesign macOS bundle
-        if: secrets.APPLE_SIGNING_CERT_B64 == '' || secrets.APPLE_SIGNING_CERT_PASSWORD == '' || secrets.APPLE_SIGNING_IDENTITY == ''
         shell: bash
+        env:
+          APPLE_SIGNING_CERT_B64: ${{ secrets.APPLE_SIGNING_CERT_B64 }}
+          APPLE_SIGNING_CERT_PASSWORD: ${{ secrets.APPLE_SIGNING_CERT_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
+          if [ -n "${APPLE_SIGNING_CERT_B64:-}" ] && [ -n "${APPLE_SIGNING_CERT_PASSWORD:-}" ] && [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
+            echo "Developer ID signing is configured; skipping ad-hoc codesign fallback."
+            exit 0
+          fi
           BUNDLE_ROOT="src-tauri/target/x86_64-apple-darwin/release/bundle"
           if [ -d "$BUNDLE_ROOT/macos" ]; then
             for app in "$BUNDLE_ROOT/macos"/*.app; do
