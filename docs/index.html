@@ -492,6 +492,41 @@
         outline: 2px solid var(--link);
         outline-offset: 3px;
       }
+      .asset-files {
+        margin-top: 10px;
+        display: grid;
+        gap: 8px;
+      }
+      .asset-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border-radius: 10px;
+        background: color-mix(in oklab, var(--surface) 72%, var(--card));
+        padding: 10px 12px;
+        font-size: 0.82rem;
+      }
+      .asset-row a {
+        color: var(--link);
+        text-decoration: none;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+      }
+      .asset-row a:hover { text-decoration: underline; }
+      .asset-size {
+        color: var(--muted);
+        flex-shrink: 0;
+        font-variant-numeric: tabular-nums;
+      }
+      .asset-empty {
+        border-radius: 10px;
+        background: color-mix(in oklab, var(--surface) 72%, var(--card));
+        padding: 10px 12px;
+        font-size: 0.8rem;
+        color: var(--muted);
+        text-align: left;
+      }
       .platform-steps {
         margin: 14px 0 0;
         padding: 0;
@@ -793,6 +828,7 @@
             automatically to GitHub Releases when a version tag (<code>v*</code>) is
             pushed or when the release workflow runs manually.
           </p>
+          <p class="section-copy" id="release-status">Loading release assets...</p>
 
           <div class="platform-grid">
             <article class="platform-card" aria-label="DevOpster macOS download">
@@ -805,6 +841,7 @@
               <h3>macOS</h3>
               <p class="formats">.dmg recommended &nbsp;·&nbsp; .tar.gz advanced</p>
               <a class="download-label" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster macOS download">↓ Download for macOS</a>
+              <div class="asset-files" id="assets-macos"></div>
               <ol class="platform-steps">
                 <li class="platform-note"><strong>Step 1:</strong> Download the latest <strong>.dmg</strong> and drag <code>DevOpster.app</code> to <code>/Applications</code>.</li>
                 <li class="platform-note"><strong>Step 2:</strong> Try opening the app. If Gatekeeper blocks it, run this once:
@@ -825,6 +862,7 @@
               <h3>Windows</h3>
               <p class="formats">.zip + .ico &nbsp;·&nbsp; <code>DevOpster-GUI.cmd</code></p>
               <a class="download-label" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster Windows download">↓ Download for Windows</a>
+              <div class="asset-files" id="assets-windows"></div>
               <ol class="platform-steps">
                 <li class="platform-note"><strong>Step 1:</strong> Download the latest Windows release and extract the package.</li>
                 <li class="platform-note"><strong>Step 2:</strong> Run the launcher from PowerShell:
@@ -848,6 +886,7 @@
               <h3>Linux</h3>
               <p class="formats">.tar.gz &nbsp;·&nbsp; .desktop &nbsp;·&nbsp; AppStream</p>
               <a class="download-label" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster Linux download">↓ Download for Linux</a>
+              <div class="asset-files" id="assets-linux"></div>
               <ol class="platform-steps">
                 <li class="platform-note"><strong>Step 1:</strong> Download the Linux package you prefer (<code>.deb</code>, <code>.AppImage</code>, or <code>.rpm</code>).</li>
                 <li class="platform-note"><strong>Step 2:</strong> AppImage quick run:
@@ -994,6 +1033,104 @@
 
     <script>
       (function () {
+        var statusEl = document.getElementById('release-status');
+        var cards = {
+          macos: {
+            label: document.querySelector('article[aria-label="DevOpster macOS download"] .download-label'),
+            list: document.getElementById('assets-macos')
+          },
+          windows: {
+            label: document.querySelector('article[aria-label="DevOpster Windows download"] .download-label'),
+            list: document.getElementById('assets-windows')
+          },
+          linux: {
+            label: document.querySelector('article[aria-label="DevOpster Linux download"] .download-label'),
+            list: document.getElementById('assets-linux')
+          }
+        };
+
+        function bytesToMB(bytes) {
+          if (!bytes || bytes <= 0) return 'n/a';
+          return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function pickAssets(assets, platform) {
+          var rules = {
+            macos: [/.dmg$/i, /\.app\.tar\.gz$/i, /macos.*\.zip$/i, /darwin.*\.zip$/i],
+            windows: [/-setup\.exe$/i, /\.msi$/i, /\.exe$/i, /windows.*\.zip$/i, /win.*\.zip$/i, /\.zip$/i],
+            linux: [/\.AppImage$/i, /\.deb$/i, /\.rpm$/i, /linux.*\.tar\.gz$/i, /\.tar\.gz$/i]
+          };
+          var filtered = assets.filter(function (a) {
+            var n = a.name || '';
+            if (/\.sig$|\.sha256$|checksums?/i.test(n)) return false;
+            return rules[platform].some(function (re) { return re.test(n); });
+          });
+          filtered.sort(function (a, b) {
+            var ai = rules[platform].findIndex(function (re) { return re.test(a.name || ''); });
+            var bi = rules[platform].findIndex(function (re) { return re.test(b.name || ''); });
+            if (ai !== bi) return ai - bi;
+            return (b.size || 0) - (a.size || 0);
+          });
+          return filtered;
+        }
+
+        function renderPlatform(platform, assets) {
+          var card = cards[platform];
+          if (!card) return;
+          card.list.innerHTML = '';
+
+          if (!assets.length) {
+            var empty = document.createElement('div');
+            empty.className = 'asset-empty';
+            empty.textContent = 'No matching assets in latest release yet.';
+            card.list.appendChild(empty);
+            return;
+          }
+
+          var primary = assets[0];
+          card.label.href = primary.browser_download_url;
+          card.label.textContent = '↓ Download ' + primary.name;
+
+          assets.slice(0, 3).forEach(function (asset) {
+            var row = document.createElement('div');
+            row.className = 'asset-row';
+
+            var link = document.createElement('a');
+            link.href = asset.browser_download_url;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = asset.name;
+
+            var size = document.createElement('span');
+            size.className = 'asset-size';
+            size.textContent = bytesToMB(asset.size);
+
+            row.appendChild(link);
+            row.appendChild(size);
+            card.list.appendChild(row);
+          });
+        }
+
+        fetch('https://api.github.com/repos/Cloud2BR/devopster-cli/releases?per_page=20')
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('Release API failed')); })
+          .then(function (releases) {
+            var rel = (releases || []).find(function (x) { return !x.draft && Array.isArray(x.assets) && x.assets.length > 0; });
+            if (!rel) throw new Error('No published releases with assets found');
+            if (statusEl) {
+              statusEl.innerHTML = 'Showing files from <code>' + rel.tag_name + '</code>.';
+            }
+
+            var assets = rel.assets || [];
+            renderPlatform('macos', pickAssets(assets, 'macos'));
+            renderPlatform('windows', pickAssets(assets, 'windows'));
+            renderPlatform('linux', pickAssets(assets, 'linux'));
+          })
+          .catch(function () {
+            if (statusEl) {
+              statusEl.innerHTML = 'No release artifacts found yet. Run a release workflow or open <a href="https://github.com/Cloud2BR/devopster-cli/releases" target="_blank" rel="noopener noreferrer">GitHub Releases</a>.';
+            }
+          });
+
         var buttons = document.querySelectorAll('.copy-btn');
         buttons.forEach(function (btn) {
           btn.addEventListener('click', function (ev) {
