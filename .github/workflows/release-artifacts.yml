@@ -24,6 +24,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install icon tooling
+        run: python -m pip install --upgrade pillow
+
       - name: Ensure icon asset exists
         run: |
           if [ ! -f assets/devopster-icon.png ]; then
@@ -43,7 +51,30 @@ jobs:
           mkdir -p dist/linux-package
           cp target/release/devopster dist/linux-package/
           cp assets/devopster-icon.png dist/linux-package/
-          tar -czf dist/devopster-linux-x86_64.tar.gz -C dist/linux-package devopster devopster-icon.png
+          cat > dist/linux-package/devopster.desktop <<'EOF'
+          [Desktop Entry]
+          Type=Application
+          Name=DevOpster
+          Comment=Delivery-first DevOps CLI control plane
+          Exec=devopster
+          Icon=devopster-icon
+          Terminal=true
+          Categories=Development;Utility;
+          EOF
+          cat > dist/linux-package/devopster.metainfo.xml <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <component type="console-application">
+            <id>io.cloud2br.devopster</id>
+            <name>DevOpster</name>
+            <summary>Delivery-first DevOps CLI control plane</summary>
+            <metadata_license>CC0-1.0</metadata_license>
+            <project_license>AGPL-3.0-or-later</project_license>
+            <description>
+              <p>Cross-platform CLI for repository governance across GitHub, Azure DevOps, and GitLab.</p>
+            </description>
+          </component>
+          EOF
+          tar -czf dist/devopster-linux-x86_64.tar.gz -C dist/linux-package devopster devopster-icon.png devopster.desktop devopster.metainfo.xml
 
       - name: Package Windows artifact
         if: runner.os == 'Windows'
@@ -53,6 +84,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path dist/windows-package | Out-Null
           Copy-Item target/release/devopster.exe dist/windows-package/devopster.exe
           Copy-Item assets/devopster-icon.png dist/windows-package/devopster-icon.png
+          python -c "from PIL import Image; img = Image.open('assets/devopster-icon.png').convert('RGBA'); img.save('dist/windows-package/devopster.ico', format='ICO', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])"
           Compress-Archive -Path dist/windows-package/* -DestinationPath dist/devopster-windows-x86_64.zip -Force
 
       - name: Package macOS artifacts
