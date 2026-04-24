@@ -427,26 +427,20 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
       }
-      a.platform-card {
+      .platform-card {
         border: 1px solid var(--border);
         border-radius: var(--radius-lg);
         background: var(--card);
         padding: 22px 18px;
         text-align: center;
-        text-decoration: none;
         color: var(--fg);
         display: block;
-        cursor: pointer;
         transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
       }
-      a.platform-card:hover {
+      .platform-card:hover {
         border-color: var(--link);
         box-shadow: 0 4px 16px color-mix(in oklab, var(--link) 18%, transparent);
         transform: translateY(-2px);
-      }
-      a.platform-card:focus-visible {
-        outline: 2px solid var(--link);
-        outline-offset: 3px;
       }
       .platform-card .platform-icon {
         width: 48px;
@@ -478,10 +472,22 @@
         color: #ffffff;
         font-weight: 600;
         font-size: 0.88rem;
-        pointer-events: none;
+        text-decoration: none;
+      }
+      .download-label:focus-visible {
+        outline: 2px solid var(--link);
+        outline-offset: 3px;
+      }
+      .platform-steps {
+        margin: 14px 0 0;
+        padding: 0;
+        list-style: none;
+        text-align: left;
+        display: grid;
+        gap: 8px;
       }
       .platform-note {
-        margin: 14px 0 0;
+        margin: 0;
         padding: 10px 12px;
         border-radius: 12px;
         background: color-mix(in oklab, var(--surface) 72%, var(--card));
@@ -619,8 +625,8 @@
       }
 
       @media (prefers-reduced-motion: reduce) {
-        a.platform-card, .hero-control-link { transition: none; }
-        a.platform-card:hover { transform: none; }
+        .platform-card, .hero-control-link { transition: none; }
+        .platform-card:hover { transform: none; }
       }
     </style>
   </head>
@@ -765,7 +771,7 @@
           </p>
 
           <div class="platform-grid">
-            <a class="platform-card" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster macOS download">
+            <article class="platform-card" aria-label="DevOpster macOS download">
               <span class="platform-icon platform-icon--macos" aria-hidden="true">
                 <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M30.085 10.5C28.96 11.875 27.12 12.942 25.28 12.792C25.042 10.993 25.955 9.128 27.019 7.86C28.195 6.46 30.215 5.479 31.84 5.4C31.982 7.291 31.298 9.08 30.085 10.5Z" fill="currentColor"/>
@@ -774,10 +780,16 @@
               </span>
               <h3>macOS</h3>
               <p class="formats">.dmg recommended &nbsp;·&nbsp; .tar.gz advanced</p>
-              <span class="download-label">↓ Download for macOS</span>
-              <p class="platform-note"><strong>Gatekeeper:</strong> prefer the <strong>.dmg</strong> with the bundled <code>DevOpster GUI.app</code>. If macOS blocks the unsigned build, run <code>xattr -cr "/Applications/DevOpster GUI.app"</code> once, then reopen it.</p>
-            </a>
-            <a class="platform-card" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster Windows download">
+              <a class="download-label" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster macOS download">↓ Download for macOS</a>
+              <ol class="platform-steps">
+                <li class="platform-note"><strong>Step 1:</strong> Download the latest <strong>.dmg</strong> and drag <code>DevOpster.app</code> to <code>/Applications</code>.</li>
+                <li class="platform-note"><strong>Step 2:</strong> Try opening the app. If Gatekeeper blocks it, run this once:
+                  <div class="copy-cmd"><code>xattr -cr "/Applications/DevOpster.app"</code><button type="button" class="copy-btn" data-copy='xattr -cr "/Applications/DevOpster.app"'>Copy</button></div>
+                </li>
+                <li class="platform-note"><strong>Step 3:</strong> Open <code>DevOpster.app</code> again and continue setup.</li>
+              </ol>
+            </article>
+            <article class="platform-card" aria-label="DevOpster Windows download">
               <span class="platform-icon platform-icon--windows" aria-hidden="true">
                 <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M6 10L22 8V22H6V10Z" fill="currentColor"/>
@@ -788,10 +800,14 @@
               </span>
               <h3>Windows</h3>
               <p class="formats">.zip + .ico &nbsp;·&nbsp; <code>DevOpster-GUI.cmd</code></p>
-              <span class="download-label">↓ Download for Windows</span>
-              <p class="platform-note"><strong>SmartScreen:</strong> if Windows warns on the unsigned <code>devopster.exe</code>, choose <strong>More info</strong> and then <strong>Run anyway</strong>.</p>
-            </a>
-            <a class="platform-card" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster Linux download">
+              <a class="download-label" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster Windows download">↓ Download for Windows</a>
+              <ol class="platform-steps">
+                <li class="platform-note"><strong>Step 1:</strong> Download the latest Windows release and extract the package.</li>
+                <li class="platform-note"><strong>Step 2:</strong> Run <code>DevOpster-GUI.cmd</code> (or <code>devopster.exe</code> directly).</li>
+                <li class="platform-note"><strong>Step 3:</strong> If SmartScreen appears, click <strong>More info</strong> then <strong>Run anyway</strong>.</li>
+              </ol>
+            </article>
+            <article class="platform-card" aria-label="DevOpster Linux download">
               <span class="platform-icon platform-icon--linux" aria-hidden="true">
                 <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M24.049 7C19.979 7 17.421 10.306 17.421 14.604C17.421 16.2 17.721 17.314 18.384 18.801C15.591 20.442 13.837 23.989 13.837 28.455C13.837 34.781 18.159 41 24.049 41C29.939 41 34.261 34.781 34.261 28.455C34.261 24.002 32.49 20.445 29.714 18.805C30.376 17.329 30.676 16.214 30.676 14.604C30.676 10.306 28.118 7 24.049 7Z" fill="currentColor"/>
@@ -805,9 +821,13 @@
               </span>
               <h3>Linux</h3>
               <p class="formats">.tar.gz &nbsp;·&nbsp; .desktop &nbsp;·&nbsp; AppStream</p>
-              <span class="download-label">↓ Download for Linux</span>
-              <p class="platform-note"><strong>Desktop integration:</strong> the tarball ships a <code>.desktop</code> entry plus AppStream metadata so the binary registers with your launcher after install.</p>
-            </a>
+              <a class="download-label" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster Linux download">↓ Download for Linux</a>
+              <ol class="platform-steps">
+                <li class="platform-note"><strong>Step 1:</strong> Download the Linux package you prefer (<code>.deb</code>, <code>.AppImage</code>, or <code>.rpm</code>).</li>
+                <li class="platform-note"><strong>Step 2:</strong> Install and launch DevOpster from your app menu or terminal.</li>
+                <li class="platform-note"><strong>Step 3:</strong> Desktop integration includes <code>.desktop</code> and AppStream metadata in release artifacts.</li>
+              </ol>
+            </article>
           </div>
         </div>
       </section>
