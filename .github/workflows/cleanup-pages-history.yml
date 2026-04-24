@@ -1,0 +1,71 @@
+name: Cleanup Pages History
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+  deployments: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.merged == true
+    steps:
+      - name: Remove old Deploy GitHub Pages workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          workflow: deploy-pages.yml
+          retain_days: 0
+          keep_minimum_runs: 2
+
+      - name: Clean old GitHub Pages deployments
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          echo "Fetching deployments for environment: github-pages..."
+          DEPLOYMENTS=$(gh api "repos/${REPO}/deployments?environment=github-pages&per_page=100" \
+            --jq '.[].id' 2>/dev/null || true)
+
+          if [ -z "$DEPLOYMENTS" ]; then
+            echo "No deployments found."
+            exit 0
+          fi
+
+          # Keep the 2 most recent, delete the rest
+          KEEP=2
+          COUNT=0
+          DELETED=0
+          while IFS= read -r id; do
+            COUNT=$((COUNT + 1))
+            if [ "$COUNT" -le "$KEEP" ]; then
+              echo "Keeping deployment ${id} (#${COUNT})"
+              continue
+            fi
+
+            echo "Marking deployment ${id} as inactive..."
+            gh api "repos/${REPO}/deployments/${id}/statuses" \
+              -X POST \
+              -f state=inactive \
+              -f description="Cleaned by automation" \
+              --silent 2>/dev/null || true
+
+            echo "Deleting deployment ${id}..."
+            gh api "repos/${REPO}/deployments/${id}" \
+              -X DELETE \
+              --silent 2>/dev/null || true
+            DELETED=$((DELETED + 1))
+          done <<< "$DEPLOYMENTS"
+
+          echo "Done. Kept ${KEEP}, deleted ${DELETED} old deployment(s)."

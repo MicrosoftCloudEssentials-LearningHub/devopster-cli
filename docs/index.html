@@ -3,325 +3,490 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>devopster-cli | Delivery-First Control Plane</title>
+  <title>DevOpster — Cross-platform DevOps CLI &amp; GUI</title>
+  <meta name="description" content="DevOpster is an open-source cross-platform CLI and desktop app for repository governance across GitHub, Azure DevOps, and GitLab." />
+  <link rel="icon" type="image/png" href="assets/devopster-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #001d4a;
-      --bg-2: #06357f;
-      --panel: #072a63;
+      --bg: #001233;
+      --bg-2: #001d4a;
+      --panel: #062a63;
       --panel-2: #0a3a88;
-      --ink: #e8f4ff;
-      --muted: #b9d4ff;
-      --line: #4f7fcc;
+      --ink: #eaf2ff;
+      --muted: #a9c4ee;
+      --line: #2d579e;
       --cta: #e31b23;
       --cta-2: #ff4d55;
       --ok: #7cffb2;
+      --soft: rgba(255, 255, 255, 0.06);
     }
 
     * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
 
     body {
-      margin: 0;
       color: var(--ink);
       font-family: "Space Grotesk", "Segoe UI", sans-serif;
       background:
-        radial-gradient(circle at 12% 8%, #1c58bd 0%, transparent 32%),
-        radial-gradient(circle at 85% 20%, #0b4ecf 0%, transparent 34%),
-        linear-gradient(160deg, var(--bg) 0%, var(--bg-2) 45%, #02132f 100%);
+        radial-gradient(circle at 12% 8%, #1c58bd 0%, transparent 30%),
+        radial-gradient(circle at 88% 18%, #0b4ecf 0%, transparent 32%),
+        linear-gradient(160deg, var(--bg) 0%, var(--bg-2) 50%, #02132f 100%);
       line-height: 1.6;
+      min-height: 100vh;
     }
 
-    .wrap {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 28px 20px 56px;
-    }
+    a { color: #cfe2ff; }
 
-    .topline {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 18px;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 22px 60px; }
 
-    .topline a {
-      color: var(--ink);
-      text-decoration: none;
-      border-bottom: 1px dashed rgba(232, 244, 255, 0.6);
+    /* Top bar */
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 12px; margin-bottom: 22px;
+      color: var(--muted); font-size: 0.92rem;
     }
+    .topbar .left { display: flex; gap: 14px; align-items: center; }
+    .topbar .left img { height: 28px; width: 28px; border-radius: 6px; }
+    .topbar .right a {
+      color: var(--ink); text-decoration: none; margin-left: 14px;
+    }
+    .topbar .right a:hover { color: var(--ok); }
 
+    /* Hero */
     .hero {
       display: grid;
-      grid-template-columns: minmax(280px, 1fr) 280px;
-      gap: 22px;
-      background: linear-gradient(160deg, var(--panel) 0%, var(--panel-2) 100%);
+      grid-template-columns: minmax(320px, 1fr) 300px;
+      gap: 26px;
+      background: linear-gradient(155deg, var(--panel) 0%, var(--panel-2) 100%);
       border: 1px solid var(--line);
       border-radius: 24px;
-      padding: 26px;
-      box-shadow: 0 24px 70px rgba(0, 10, 35, 0.35);
-      animation: rise 580ms ease-out both;
+      padding: 34px;
+      box-shadow: 0 28px 80px rgba(0, 8, 30, 0.45);
     }
-
     .eyebrow {
-      margin: 0 0 10px;
-      color: var(--ok);
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      font-size: 0.76rem;
-      font-weight: 700;
+      margin: 0 0 14px; color: var(--ok);
+      letter-spacing: 0.16em; text-transform: uppercase;
+      font-size: 0.78rem; font-weight: 700;
     }
-
     h1 {
-      margin: 0;
-      font-family: "Chakra Petch", "Space Grotesk", sans-serif;
-      font-size: clamp(2rem, 5.4vw, 3.25rem);
-      line-height: 1.06;
-      letter-spacing: 0.01em;
+      margin: 0; font-family: "Chakra Petch", "Space Grotesk", sans-serif;
+      font-size: clamp(2.1rem, 5.6vw, 3.4rem); line-height: 1.05;
     }
-
-    .cli-pill {
-      display: inline-block;
-      margin-left: 10px;
-      padding: 3px 12px;
-      border-radius: 999px;
-      font-size: 0.58em;
-      font-weight: 700;
-      color: #ffe7e8;
+    .pill {
+      display: inline-block; margin-left: 10px;
+      padding: 4px 14px; border-radius: 999px;
+      font-size: 0.5em; font-weight: 700; color: #fff;
       background: linear-gradient(140deg, var(--cta) 0%, var(--cta-2) 100%);
-      box-shadow: 0 4px 20px rgba(227, 27, 35, 0.35);
-      vertical-align: middle;
+      box-shadow: 0 4px 22px rgba(227, 27, 35, 0.4);
+      vertical-align: middle; letter-spacing: 0.06em;
     }
-
-    .sub {
-      margin: 12px 0 14px;
-      color: var(--muted);
-      max-width: 62ch;
+    .lede {
+      margin: 16px 0 18px; color: var(--muted);
+      max-width: 60ch; font-size: 1.02rem;
     }
+    .badges { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .badges img { height: 22px; }
 
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
     .btn {
-      text-decoration: none;
-      color: #fff;
-      padding: 9px 14px;
-      border-radius: 10px;
-      font-weight: 700;
-      border: 1px solid transparent;
-      transition: transform 160ms ease, opacity 160ms ease;
+      text-decoration: none; color: #fff; padding: 11px 18px;
+      border-radius: 10px; font-weight: 700; border: 1px solid transparent;
+      transition: transform 160ms ease, opacity 160ms ease; font-size: 0.95rem;
     }
-
-    .btn:hover { transform: translateY(-1px); opacity: 0.95; }
+    .btn:hover { transform: translateY(-1px); opacity: 0.96; }
     .btn-primary { background: linear-gradient(145deg, var(--cta) 0%, var(--cta-2) 100%); }
-    .btn-ghost {
-      background: transparent;
-      border-color: var(--line);
-      color: var(--ink);
-    }
-
-    .meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 8px;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
+    .btn-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
 
     .brand {
       background: linear-gradient(160deg, #0943b1 0%, #0b4ecf 100%);
       border: 1px solid rgba(191, 218, 255, 0.35);
-      border-radius: 18px;
-      min-height: 220px;
-      display: grid;
-      place-items: center;
-      padding: 16px;
+      border-radius: 18px; min-height: 220px;
+      display: grid; place-items: center; padding: 18px;
     }
-
     .brand img {
-      width: min(190px, 100%);
-      height: auto;
-      filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.28));
-      transform: translateY(0);
-      animation: bob 2.6s ease-in-out infinite;
+      width: min(200px, 100%); height: auto;
+      filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.35));
     }
 
-    .grid {
-      margin-top: 22px;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
+    /* Quick links stripe */
+    .stripe {
+      margin-top: 22px; display: flex; flex-wrap: wrap;
+      gap: 8px; align-items: center; color: var(--muted);
+      font-size: 0.86rem; letter-spacing: 0.12em; text-transform: uppercase;
     }
-
-    .card {
-      background: linear-gradient(170deg, rgba(7, 38, 91, 0.9) 0%, rgba(3, 26, 67, 0.95) 100%);
-      border: 1px solid rgba(105, 151, 226, 0.6);
-      border-radius: 18px;
-      padding: 18px;
-      animation: rise 680ms ease-out both;
+    .stripe .chip {
+      padding: 8px 14px; border-radius: 999px;
+      background: var(--soft); border: 1px solid var(--line);
+      color: var(--ink); text-decoration: none; font-weight: 600;
+      letter-spacing: 0.02em; text-transform: none; font-size: 0.9rem;
     }
+    .stripe .chip:hover { border-color: var(--ok); color: var(--ok); }
 
-    .card h2 {
-      margin: 0 0 10px;
+    /* Section headings */
+    section.block { margin-top: 56px; }
+    h2.section-title {
       font-family: "Chakra Petch", "Space Grotesk", sans-serif;
-      letter-spacing: 0.02em;
-      font-size: 1.25rem;
+      font-size: clamp(1.5rem, 3vw, 2rem); margin: 0 0 8px;
     }
+    .section-sub { color: var(--muted); margin: 0 0 22px; max-width: 70ch; }
 
-    .card p {
-      margin: 0 0 10px;
-      color: var(--muted);
+    /* Feature cards */
+    .features {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;
     }
-
-    .list {
-      margin: 0;
-      padding-left: 18px;
-      color: var(--ink);
+    .feature {
+      background: linear-gradient(170deg, rgba(7, 38, 91, 0.92) 0%, rgba(3, 26, 67, 0.96) 100%);
+      border: 1px solid rgba(105, 151, 226, 0.55);
+      border-radius: 16px; padding: 20px;
     }
-
-    .list li { margin: 6px 0; }
-
-    .pipeline {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
+    .feature .num {
+      font-family: "Chakra Petch", monospace; color: var(--ok);
+      font-weight: 700; letter-spacing: 0.1em; font-size: 0.8rem;
     }
-
-    .pipeline img { height: 20px; }
-
-    .badge {
-      margin-top: 10px;
-      display: inline-block;
+    .feature h3 {
+      margin: 6px 0 8px;
+      font-family: "Chakra Petch", "Space Grotesk", sans-serif; font-size: 1.18rem;
     }
+    .feature p { margin: 0; color: var(--muted); }
 
-    .badge img { height: 24px; }
+    /* Capability rows */
+    .caps { margin-top: 20px; display: grid; gap: 12px; }
+    .cap {
+      display: grid; grid-template-columns: 220px 1fr; gap: 16px;
+      padding: 18px; border: 1px solid var(--line);
+      border-radius: 14px; background: rgba(6, 25, 60, 0.55); align-items: start;
+    }
+    .cap .tag {
+      color: var(--ok); letter-spacing: 0.14em; text-transform: uppercase;
+      font-size: 0.78rem; font-weight: 700;
+    }
+    .cap .name { font-weight: 700; margin: 4px 0 6px; font-size: 1.05rem; }
+    .cap p { margin: 0; color: var(--muted); }
 
+    /* Download cards */
+    .downloads {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;
+    }
+    .dl {
+      background: linear-gradient(170deg, rgba(7, 38, 91, 0.92) 0%, rgba(3, 26, 67, 0.96) 100%);
+      border: 1px solid var(--line);
+      border-radius: 16px; padding: 22px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .dl h3 { margin: 0; font-family: "Chakra Petch", "Space Grotesk", sans-serif; font-size: 1.25rem; }
+    .dl ul { margin: 0; padding-left: 18px; color: var(--muted); }
+    .dl ul li { margin: 6px 0; }
+    .dl .btn { align-self: flex-start; }
+
+    /* Quick start steps */
+    .steps { display: grid; gap: 12px; }
+    .step {
+      display: grid; grid-template-columns: 56px 1fr; gap: 16px;
+      padding: 18px; border: 1px solid var(--line);
+      border-radius: 14px; background: rgba(6, 25, 60, 0.55); align-items: start;
+    }
+    .step .index {
+      width: 44px; height: 44px; border-radius: 50%;
+      display: grid; place-items: center;
+      background: linear-gradient(145deg, var(--cta) 0%, var(--cta-2) 100%);
+      font-weight: 700; color: #fff; font-family: "Chakra Petch", monospace;
+    }
+    .step h4 { margin: 0 0 6px; font-size: 1.05rem; }
+    .step p { margin: 0; color: var(--muted); }
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+      background: rgba(0, 0, 0, 0.32);
+      border: 1px solid rgba(105, 151, 226, 0.3);
+      padding: 2px 6px; border-radius: 6px;
+      font-size: 0.92em; color: #d6e6ff;
+    }
+    pre { padding: 12px 14px; overflow-x: auto; display: block; margin: 8px 0 0; }
+
+    /* Owner / Org */
+    .owner { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .who {
+      background: rgba(6, 25, 60, 0.55); border: 1px solid var(--line);
+      border-radius: 16px; padding: 22px;
+      display: flex; gap: 18px; align-items: center;
+    }
+    .who img { width: 84px; height: 84px; border-radius: 50%; border: 2px solid var(--line); }
+    .who h3 { margin: 0 0 4px; font-family: "Chakra Petch", "Space Grotesk", sans-serif; }
+    .who p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+    .who a { color: var(--ok); text-decoration: none; margin-right: 10px; }
+
+    /* Footer */
     footer {
-      margin-top: 18px;
-      color: var(--muted);
-      font-size: 0.92rem;
-      text-align: center;
+      margin-top: 60px; color: var(--muted); text-align: center; font-size: 0.92rem;
+      border-top: 1px solid var(--line); padding-top: 22px;
     }
-
-    a { color: #d7ecff; }
-
-    @keyframes rise {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes bob {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-4px); }
-    }
+    .badge-block { display: inline-flex; align-items: center; gap: 12px; margin-top: 12px; }
+    .badge-block img { height: 22px; }
 
     @media (max-width: 960px) {
       .hero { grid-template-columns: 1fr; }
-      .brand { min-height: 200px; }
-      .grid { grid-template-columns: 1fr; }
+      .features, .downloads { grid-template-columns: 1fr; }
+      .owner { grid-template-columns: 1fr; }
+      .cap { grid-template-columns: 1fr; }
+      .step { grid-template-columns: 44px 1fr; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="topline">
-      <div>Costa Rica / USA</div>
-      <div>
-        <a href="https://github.com/Cloud2BR">Cloud2BR</a>
-        ·
-        <a href="https://github.com/Cloud2BR/devopster-cli">devopster-cli</a>
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="left">
+        <img src="assets/devopster-icon.png" alt="DevOpster icon" />
+        <strong>DevOpster</strong>
       </div>
-    </div>
+      <nav class="right">
+        <a href="#what">What it is</a>
+        <a href="#download">Download</a>
+        <a href="#quickstart">Quick start</a>
+        <a href="#owner">Owner</a>
+        <a href="https://github.com/Cloud2BR/devopster-cli">Source ↗</a>
+      </nav>
+    </header>
 
+    <!-- Hero -->
     <section class="hero">
       <div>
-        <p class="eyebrow">Delivery-First DevOps Control Plane</p>
-        <h1>devopster <span class="cli-pill">CLI</span></h1>
-        <p class="sub">
-          Build, validate, and ship repository governance workflows across GitHub, Azure DevOps,
-          and GitLab from one container-first command surface.
+        <p class="eyebrow">Open-Source DevOps Control Plane</p>
+        <h1>DevOpster <span class="pill">CLI + GUI</span></h1>
+        <p class="lede">
+          Cross-platform CLI and desktop application for repository governance across
+          GitHub, Azure DevOps, and GitLab. Audit, blueprint, sync, and ship from one
+          container-first workflow — with a native app experience on macOS, Windows, and Linux.
         </p>
 
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="https://github.com/Cloud2BR/devopster-cli/releases">Download Artifacts</a>
-          <a class="btn btn-ghost" href="https://github.com/Cloud2BR/devopster-cli/actions">View Pipelines</a>
-          <a class="btn btn-ghost" href="https://github.com/Cloud2BR/devopster-cli">Source</a>
+        <div class="badges">
+          <a href="https://github.com/Cloud2BR/devopster-cli/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Cloud2BR/devopster-cli/ci.yml?label=CI&style=for-the-badge&color=0ea5e9" /></a>
+          <a href="https://github.com/Cloud2BR/devopster-cli/actions/workflows/release-artifacts.yml"><img alt="Release" src="https://img.shields.io/github/actions/workflow/status/Cloud2BR/devopster-cli/release-artifacts.yml?label=Release&style=for-the-badge&color=f97316" /></a>
+          <a href="https://github.com/Cloud2BR/devopster-cli/actions/workflows/deploy-pages.yml"><img alt="Pages" src="https://img.shields.io/github/actions/workflow/status/Cloud2BR/devopster-cli/deploy-pages.yml?label=Pages&style=for-the-badge&color=22c55e" /></a>
+          <!-- START BADGE -->
+          <img src="https://img.shields.io/badge/Total%20views-0-limegreen?style=for-the-badge" alt="Total views" />
+          <!-- END BADGE -->
         </div>
 
-        <div class="meta">
-          <span>Cross-provider governance</span>
-          <span>Container-only local flow</span>
-          <span>Automated release assets</span>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#download">Download DevOpster</a>
+          <a class="btn btn-ghost" href="#quickstart">Quick start</a>
+          <a class="btn btn-ghost" href="https://github.com/Cloud2BR/devopster-cli">Source on GitHub ↗</a>
         </div>
       </div>
 
-      <aside class="brand" aria-label="Red lobster logo on blue background">
-        <img src="assets/devopster-icon.png" alt="Devopster red lobster logo" />
+      <aside class="brand" aria-label="DevOpster red lobster logo on blue background">
+        <img src="assets/devopster-icon.png" alt="DevOpster red lobster icon on blue background" />
       </aside>
     </section>
 
-    <section class="grid">
-      <article class="card">
-        <h2>What You Deliver Faster</h2>
-        <ul class="list">
-          <li>Organization repository inventories with multi-provider targets.</li>
-          <li>Audit + fix loops for description, topics, license, and branch policy.</li>
-          <li>Blueprint sync and reusable repository standards at scale.</li>
-          <li>Consistent delivery pipeline through containerized commands.</li>
-        </ul>
-      </article>
+    <!-- Quick links stripe -->
+    <div class="stripe">
+      <span>Quick links</span>
+      <a class="chip" href="#download">Download guide</a>
+      <a class="chip" href="https://github.com/Cloud2BR/devopster-cli/releases">All releases ↗</a>
+      <a class="chip" href="https://github.com/Cloud2BR/devopster-cli/actions">Build pipelines ↗</a>
+      <a class="chip" href="https://github.com/Cloud2BR/devopster-cli/issues">Feedback ↗</a>
+      <a class="chip" href="https://github.com/Cloud2BR/devopster-cli">Source ↗</a>
+    </div>
 
-      <article class="card">
-        <h2>Quick Start</h2>
-        <p>Everything is geared around delivery speed with containerized execution.</p>
-        <ul class="list">
-          <li>Install Docker Desktop.</li>
-          <li>Clone <a href="https://github.com/Cloud2BR/devopster-cli">devopster-cli</a>.</li>
-          <li>Run <code>devopster dev-env</code>.</li>
-          <li>Run <code>devopster setup</code> to complete onboarding.</li>
-        </ul>
-      </article>
+    <!-- What is DevOpster -->
+    <section class="block" id="what">
+      <h2 class="section-title">What is DevOpster?</h2>
+      <p class="section-sub">
+        DevOpster is an open-source DevOps control plane built in Rust. It centralizes the
+        repetitive work of managing many repositories across multiple providers — auditing
+        metadata, blueprinting standards, syncing shared workflows, and producing reusable
+        catalogs. It runs as a fast CLI for power users and as a native desktop app for
+        teams that prefer a guided experience.
+      </p>
 
-      <article class="card">
-        <h2>Pipelines At A Glance</h2>
-        <p>Shipping and visibility are built into the repository.</p>
-        <div class="pipeline">
-          <a href="https://github.com/Cloud2BR/devopster-cli/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/badge/CI-Container%20Checks-0ea5e9" /></a>
-          <a href="https://github.com/Cloud2BR/devopster-cli/actions/workflows/release-artifacts.yml"><img alt="Release artifacts" src="https://img.shields.io/badge/Releases-Linux%20%7C%20Windows%20%7C%20macOS-f97316" /></a>
-          <a href="https://github.com/Cloud2BR/devopster-cli/actions/workflows/deploy-pages.yml"><img alt="Pages" src="https://img.shields.io/badge/Pages-GitHub%20Actions-22c55e" /></a>
+      <div class="features">
+        <div class="feature">
+          <div class="num">01</div>
+          <h3>Bring your own org</h3>
+          <p>Connect GitHub, Azure DevOps, and GitLab. Manage every repository from one configuration file.</p>
         </div>
-
-        <div class="badge">
-          <!-- START BADGE -->
-          <span class="badge-link"><img src="https://img.shields.io/badge/Total%20views-20-limegreen" alt="Total views" loading="lazy" /></span>
-          <!-- END BADGE -->
+        <div class="feature">
+          <div class="num">02</div>
+          <h3>Audit and fix at scale</h3>
+          <p>Find missing descriptions, topics, licenses, and branch drift. Apply guided fixes interactively.</p>
         </div>
-      </article>
+        <div class="feature">
+          <div class="num">03</div>
+          <h3>Distribute like a product</h3>
+          <p>Native installers for macOS, Windows, and Linux. CLI binaries and a desktop GUI in the same release.</p>
+        </div>
+      </div>
 
-      <article class="card">
-        <h2>Owner / Organization</h2>
-        <p>
-          Maintained under <a href="https://github.com/Cloud2BR">Cloud2BR</a> with release artifacts and
-          docs automation managed in GitHub Actions.
-        </p>
-        <p>Project identity: red lobster mark on blue background, focused on practical DevOps delivery.</p>
-      </article>
+      <div class="caps">
+        <div class="cap">
+          <div>
+            <div class="tag">Authoring</div>
+            <div class="name">CLI &amp; container workflow</div>
+          </div>
+          <p>Run direct commands or open the interactive launcher. Everything ships inside a Docker-based dev environment so the host stays minimal.</p>
+        </div>
+        <div class="cap">
+          <div>
+            <div class="tag">Governance</div>
+            <div class="name">Repository policy &amp; audit</div>
+          </div>
+          <p>Enforce description, topic, license, and default-branch policy. Fix gaps interactively or in batch with safe prompts.</p>
+        </div>
+        <div class="cap">
+          <div>
+            <div class="tag">Catalog</div>
+            <div class="name">Org-wide inventory</div>
+          </div>
+          <p>Generate machine-readable catalogs and statistics for the whole organization. Filter by topic and provider.</p>
+        </div>
+        <div class="cap">
+          <div>
+            <div class="tag">Distribution</div>
+            <div class="name">Cross-platform installers</div>
+          </div>
+          <p>Native bundles for Linux, macOS, and Windows: <code>tar.gz</code>, <code>.dmg</code>, <code>.zip</code>, with platform icons (<code>.icns</code>, <code>.ico</code>).</p>
+        </div>
+        <div class="cap">
+          <div>
+            <div class="tag">Maintenance</div>
+            <div class="name">Pipeline visibility</div>
+          </div>
+          <p>CI, release, and Pages deploys are first-class. Status badges in the hero reflect what is shipping right now.</p>
+        </div>
+      </div>
     </section>
 
+    <!-- Download -->
+    <section class="block" id="download">
+      <h2 class="section-title">Download DevOpster</h2>
+      <p class="section-sub">
+        Grab the latest installer for your operating system. Builds publish automatically to
+        GitHub Releases when a version tag (<code>v*</code>) is pushed or when the release
+        workflow runs manually.
+      </p>
+
+      <div class="downloads">
+        <div class="dl">
+          <h3>macOS</h3>
+          <ul>
+            <li><code>devopster-macos.dmg</code> (CLI + native <code>DevOpster GUI.app</code>)</li>
+            <li><code>devopster-macos-x86_64.tar.gz</code></li>
+            <li>Includes <code>.icns</code> icon</li>
+          </ul>
+          <a class="btn btn-primary" href="https://github.com/Cloud2BR/devopster-cli/releases/latest">Download for macOS</a>
+        </div>
+        <div class="dl">
+          <h3>Windows</h3>
+          <ul>
+            <li><code>devopster-windows-x86_64.zip</code> (CLI + GUI launcher)</li>
+            <li>Includes <code>devopster.ico</code></li>
+            <li>Run <code>DevOpster-GUI.cmd</code> for guided mode</li>
+          </ul>
+          <a class="btn btn-primary" href="https://github.com/Cloud2BR/devopster-cli/releases/latest">Download for Windows</a>
+        </div>
+        <div class="dl">
+          <h3>Linux</h3>
+          <ul>
+            <li><code>devopster-linux-x86_64.tar.gz</code> (CLI + GUI launcher)</li>
+            <li>Includes <code>.desktop</code> &amp; AppStream metadata</li>
+            <li>PNG icon ready for desktop integration</li>
+          </ul>
+          <a class="btn btn-primary" href="https://github.com/Cloud2BR/devopster-cli/releases/latest">Download for Linux</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick start -->
+    <section class="block" id="quickstart">
+      <h2 class="section-title">Quick start</h2>
+      <p class="section-sub">
+        Everything runs inside Docker. No local Rust toolchain required for end-user tasks.
+      </p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="index">1</div>
+          <div>
+            <h4>Install Docker</h4>
+            <p>Install <a href="https://www.docker.com/products/docker-desktop/">Docker Desktop</a> or Docker Engine for your operating system.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="index">2</div>
+          <div>
+            <h4>Clone and bootstrap</h4>
+            <p>Clone the repository and start the containerized environment.</p>
+            <pre>git clone https://github.com/Cloud2BR/devopster-cli.git
+cd devopster-cli
+devopster dev-env</pre>
+          </div>
+        </div>
+        <div class="step">
+          <div class="index">3</div>
+          <div>
+            <h4>Run guided onboarding</h4>
+            <p>One command to log in and generate your config.</p>
+            <pre>devopster setup</pre>
+          </div>
+        </div>
+        <div class="step">
+          <div class="index">4</div>
+          <div>
+            <h4>Use CLI or GUI</h4>
+            <p>Run direct commands like <code>devopster repo audit</code>, or launch the interactive mode with <code>devopster gui</code>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Owner / Organization -->
+    <section class="block" id="owner">
+      <h2 class="section-title">Owner / Organization</h2>
+      <p class="section-sub">
+        DevOpster is maintained by the owner and published through the Cloud2BR organization
+        with release assets and documentation automation managed in GitHub Actions.
+      </p>
+
+      <div class="owner">
+        <div class="who">
+          <img src="https://github.com/brown9804.png?size=160" alt="Owner avatar" />
+          <div>
+            <h3>Timna Brown</h3>
+            <p>Costa Rica / USA</p>
+            <p>
+              <a href="https://github.com/brown9804">@brown9804</a>
+              <a href="https://www.linkedin.com/in/timna-b-939492161/">LinkedIn ↗</a>
+            </p>
+          </div>
+        </div>
+        <div class="who">
+          <img src="https://github.com/Cloud2BR.png?size=160" alt="Cloud2BR organization avatar" />
+          <div>
+            <h3>Cloud2BR</h3>
+            <p>Publishing organization for site, releases, and open-source distribution.</p>
+            <p>
+              <a href="https://github.com/Cloud2BR">@Cloud2BR</a>
+              <a href="https://github.com/Cloud2BR/devopster-cli">devopster-cli ↗</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
     <footer>
-      devopster-cli · Delivery-focused CLI for governance, automation, and release operations.
+      DevOpster · Delivery-focused CLI &amp; desktop app for governance, automation, and release operations.
+      <div class="badge-block">
+        <!-- START BADGE -->
+        <img src="https://img.shields.io/badge/Total%20views-0-limegreen" alt="Total views" />
+        <!-- END BADGE -->
+        <span>Refresh Date: 2026-04-23</span>
+      </div>
     </footer>
   </div>
 </body>

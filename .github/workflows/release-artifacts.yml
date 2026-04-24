@@ -33,6 +33,7 @@ jobs:
         run: python -m pip install --upgrade pillow
 
       - name: Ensure icon asset exists
+        shell: bash
         run: |
           if [ ! -f assets/devopster-icon.png ]; then
             echo "assets/devopster-icon.png is required for release packaging"
