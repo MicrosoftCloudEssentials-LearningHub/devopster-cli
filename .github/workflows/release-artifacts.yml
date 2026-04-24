@@ -113,21 +113,23 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           mkdir -p dist/devopster-cli
-          mkdir -p dist/iconset
+          # iconutil requires the directory to end with .iconset
+          mkdir -p dist/devopster.iconset
           cp target/release/devopster dist/devopster-cli/
           cp assets/devopster-icon.png dist/devopster-cli/
 
-          sips -z 16 16 assets/devopster-icon.png --out dist/iconset/icon_16x16.png
-          sips -z 32 32 assets/devopster-icon.png --out dist/iconset/icon_16x16@2x.png
-          sips -z 32 32 assets/devopster-icon.png --out dist/iconset/icon_32x32.png
-          sips -z 64 64 assets/devopster-icon.png --out dist/iconset/icon_32x32@2x.png
-          sips -z 128 128 assets/devopster-icon.png --out dist/iconset/icon_128x128.png
-          sips -z 256 256 assets/devopster-icon.png --out dist/iconset/icon_128x128@2x.png
-          sips -z 256 256 assets/devopster-icon.png --out dist/iconset/icon_256x256.png
-          sips -z 512 512 assets/devopster-icon.png --out dist/iconset/icon_256x256@2x.png
-          sips -z 512 512 assets/devopster-icon.png --out dist/iconset/icon_512x512.png
-          cp assets/devopster-icon.png dist/iconset/icon_512x512@2x.png
-          iconutil -c icns dist/iconset -o dist/devopster.icns
+          sips -z 16 16     assets/devopster-icon.png --out dist/devopster.iconset/icon_16x16.png
+          sips -z 32 32     assets/devopster-icon.png --out dist/devopster.iconset/icon_16x16@2x.png
+          sips -z 32 32     assets/devopster-icon.png --out dist/devopster.iconset/icon_32x32.png
+          sips -z 64 64     assets/devopster-icon.png --out dist/devopster.iconset/icon_32x32@2x.png
+          sips -z 128 128   assets/devopster-icon.png --out dist/devopster.iconset/icon_128x128.png
+          sips -z 256 256   assets/devopster-icon.png --out dist/devopster.iconset/icon_128x128@2x.png
+          sips -z 256 256   assets/devopster-icon.png --out dist/devopster.iconset/icon_256x256.png
+          sips -z 512 512   assets/devopster-icon.png --out dist/devopster.iconset/icon_256x256@2x.png
+          sips -z 512 512   assets/devopster-icon.png --out dist/devopster.iconset/icon_512x512.png
+          # icon_512x512@2x must be 1024x1024 — upscale from source
+          sips -z 1024 1024 assets/devopster-icon.png --out dist/devopster.iconset/icon_512x512@2x.png
+          iconutil -c icns dist/devopster.iconset -o dist/devopster.icns
           cp dist/devopster.icns dist/devopster-cli/
 
           mkdir -p "dist/devopster-cli/DevOpster GUI.app/Contents/MacOS"
