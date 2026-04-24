@@ -13,6 +13,11 @@ on:
         required: false
         type: boolean
         default: false
+      release_tag:
+        description: Release tag to create/use when publishing manually (for example desktop-v0.1.0-debug1)
+        required: false
+        type: string
+        default: "desktop-v0.1.0-debug1"
       build_macos_x64:
         description: Build Intel macOS artifact (macos-13, may queue longer)
         required: false
@@ -250,8 +255,9 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
           files: flat/*
           generate_release_notes: true
-          name: DevOpster Desktop ${{ github.ref_name }}
+          name: DevOpster Desktop ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
           draft: false
-          prerelease: false
+          prerelease: ${{ github.event_name == 'workflow_dispatch' }}
