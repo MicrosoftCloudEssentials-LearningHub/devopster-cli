@@ -106,6 +106,39 @@ jobs:
       - name: Build Tauri bundle
         run: cargo tauri build --target ${{ matrix.target }}
 
+      - name: Inject installer scripts into DMG
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUNDLE_ROOT="src-tauri/target/${{ matrix.target }}/release/bundle/dmg"
+          [ -d "$BUNDLE_ROOT" ] || { echo "No DMG bundle directory found"; exit 0; }
+          
+          for dmg in "$BUNDLE_ROOT"/*.dmg; do
+            [ -f "$dmg" ] || continue
+            echo "Injecting installer scripts into: $dmg"
+            
+            # Create temp mount point
+            MOUNT_POINT="/tmp/devopster-dmg-$$"
+            mkdir -p "$MOUNT_POINT"
+            
+            # Attach the DMG
+            hdiutil attach "$dmg" -mountpoint "$MOUNT_POINT" -nobrowse
+            
+            # Copy installer scripts into the mounted DMG
+            cp scripts/install-macos-app.sh "$MOUNT_POINT/DevOpster-macos-install.sh"
+            cp scripts/install-macos-app.command "$MOUNT_POINT/DevOpster-macos-install.command"
+            chmod +x "$MOUNT_POINT/DevOpster-macos-install.sh"
+            chmod +x "$MOUNT_POINT/DevOpster-macos-install.command"
+            
+            echo "Files added to DMG:"
+            ls -la "$MOUNT_POINT/" | grep -E '\.(sh|command)$' || true
+            
+            # Detach the DMG
+            hdiutil detach "$MOUNT_POINT"
+            rm -rf "$MOUNT_POINT"
+          done
+
       - name: Import Apple signing certificate
         if: runner.os == 'macOS'
         shell: bash
@@ -229,12 +262,6 @@ jobs:
                  -o -name "*.msi" -o -name "*-setup.exe" \
                  -o -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm" \) \
               -exec cp {} dist/ \; || true
-          fi
-          if [ "${{ runner.os }}" = "macOS" ]; then
-            cp scripts/install-macos-app.sh dist/DevOpster-macos-install.sh
-            chmod +x dist/DevOpster-macos-install.sh
-            cp scripts/install-macos-app.command dist/DevOpster-macos-install.command
-            chmod +x dist/DevOpster-macos-install.command
           fi
           ls -la dist || true
 
@@ -398,10 +425,6 @@ jobs:
               \( -name "*.dmg" -o -name "*.app.tar.gz" \) \
               -exec cp {} dist/ \; || true
           fi
-          cp scripts/install-macos-app.sh dist/DevOpster-macos-install.sh
-          chmod +x dist/DevOpster-macos-install.sh
-          cp scripts/install-macos-app.command dist/DevOpster-macos-install.command
-          chmod +x dist/DevOpster-macos-install.command
           ls -la dist || true
 
       - name: Upload artifacts

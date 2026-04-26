@@ -854,13 +854,14 @@
                   <p class="platform-subtitle">DMG first, .app.tar.gz fallback</p>
                 </div>
               </div>
-              <p class="platform-desc">Best for end users who want the normal drag-to-Applications install flow.</p>
+              <p class="platform-desc">Open the .dmg and find <code>DevOpster-macos-install.command</code> inside — double-click it for a guided install.</p>
               <a class="download-label" id="dl-btn-macos" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Download DevOpster for macOS">↓ Download for macOS</a>
               <div class="asset-files" id="assets-macos"></div>
               <p class="platform-tip">
-                <strong>Gatekeeper:</strong> install from the <code>.dmg</code> when possible — drag <code>DevOpster.app</code> to <code>/Applications</code>, then open it normally. If macOS blocks it at first launch, run once:
+                <strong>Easiest:</strong> open the .dmg and double-click <code>DevOpster-macos-install.command</code> inside. It will handle quarantine removal and guide you through install.
+                <br/><strong>Manual:</strong> drag <code>DevOpster.app</code> from the .dmg into <code>/Applications</code>.
+                <br/><strong>Gatekeeper:</strong> if macOS blocks it at first launch:
                 <span class="copy-cmd" style="display:flex;align-items:center;gap:8px;margin-top:6px;"><code>xattr -cr "/Applications/DevOpster.app"</code><button type="button" class="copy-btn" data-copy='xattr -cr "/Applications/DevOpster.app"'>Copy</button></span>
-                then reopen the app.
               </p>
             </article>
 
@@ -870,8 +871,8 @@
                 <span class="platform-icon platform-icon--windows" aria-hidden="true">
                   <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M5 8.5L22 6.2V22H5V8.5Z" fill="currentColor"/>
-                    <path d="M26 5.7L43 3.4V22H26V5.7Z" fill="currentColor"/>
-                    <path d="M5 26H22V41.8L5 39.5V26Z" fill="currentColor"/>
+                    <path d="M26 5.7L43 3.4V22H26V5.7Z" fill="currentColor" opacity="0.9"/>
+                    <path d="M5 26H22V41.8L5 39.5V26Z" fill="currentColor" opacity="0.9"/>
                     <path d="M26 26H43V44.6L26 42.3V26Z" fill="currentColor"/>
                   </svg>
                 </span>
@@ -893,13 +894,25 @@
               <div class="platform-card-header">
                 <span class="platform-icon platform-icon--linux" aria-hidden="true">
                   <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M24.049 7C19.979 7 17.421 10.306 17.421 14.604C17.421 16.2 17.721 17.314 18.384 18.801C15.591 20.442 13.837 23.989 13.837 28.455C13.837 34.781 18.159 41 24.049 41C29.939 41 34.261 34.781 34.261 28.455C34.261 24.002 32.49 20.445 29.714 18.805C30.376 17.329 30.676 16.214 30.676 14.604C30.676 10.306 28.118 7 24.049 7Z" fill="currentColor"/>
-                    <ellipse cx="21.2" cy="14.8" rx="1.35" ry="1.75" fill="#ffffff"/>
-                    <ellipse cx="26.8" cy="14.8" rx="1.35" ry="1.75" fill="#ffffff"/>
-                    <ellipse cx="21.2" cy="15.15" rx="0.48" ry="0.62" fill="#111111"/>
-                    <ellipse cx="26.8" cy="15.15" rx="0.48" ry="0.62" fill="#111111"/>
-                    <path d="M22.5 18.55C23.157 18.879 24.856 18.879 25.512 18.55" stroke="#E88800" stroke-width="1.7" stroke-linecap="round"/>
-                    <path d="M16 35.2C18.014 34.099 19.155 33.804 21.075 33.804C22.41 33.804 23.179 34.285 24.032 34.285C24.885 34.285 25.652 33.804 26.988 33.804C28.907 33.804 30.047 34.099 32.061 35.2" stroke="#E88800" stroke-width="2.2" stroke-linecap="round"/>
+                    <!-- Tux penguin body -->
+                    <ellipse cx="24" cy="26" rx="12" ry="14" fill="currentColor"/>
+                    <!-- Tux head -->
+                    <circle cx="24" cy="12" r="8" fill="currentColor"/>
+                    <!-- Tux belly -->
+                    <ellipse cx="24" cy="26" rx="8" ry="10" fill="#ffffff"/>
+                    <!-- Tux eyes -->
+                    <circle cx="20" cy="10" r="1.5" fill="#ffffff"/>
+                    <circle cx="28" cy="10" r="1.5" fill="#ffffff"/>
+                    <!-- Tux beak -->
+                    <path d="M24 13L26 15H22Z" fill="#FFA500"/>
+                    <!-- Tux left wing -->
+                    <ellipse cx="16" cy="26" rx="3" ry="8" fill="currentColor"/>
+                    <!-- Tux right wing -->
+                    <ellipse cx="32" cy="26" rx="3" ry="8" fill="currentColor"/>
+                    <!-- Tux left foot -->
+                    <ellipse cx="20" cy="40" rx="3" ry="2" fill="#FFA500"/>
+                    <!-- Tux right foot -->
+                    <ellipse cx="28" cy="40" rx="3" ry="2" fill="#FFA500"/>
                   </svg>
                 </span>
                 <div class="platform-card-title">
@@ -926,10 +939,10 @@
                   <span aria-hidden="true" style="font-size:1.1em;"></span> macOS
                 </p>
                 <ol style="margin:0;padding-left:18px;color:var(--muted);font-size:0.84rem;line-height:1.7;">
-                  <li>Download the latest DMG from the macOS card.</li>
-                  <li>Open the disk image and drag <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">DevOpster.app</code> into <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">/Applications</code>.</li>
-                  <li>If macOS blocks it at first launch, open Terminal and run:<br><code style="background:var(--surface2);padding:2px 6px;border-radius:4px;display:inline-block;margin-top:4px;">xattr -cr "/Applications/DevOpster.app"</code></li>
-                  <li>Reopen the app and continue.</li>
+                  <li>Download the latest DMG from the macOS card and open it.</li>
+                  <li><strong>Easiest: </strong> double-click <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">DevOpster-macos-install.command</code> inside the DMG. It will install and guide you.</li>
+                  <li><strong>Or manually: </strong> drag <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">DevOpster.app</code> to <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">/Applications</code>.</li>
+                  <li>If macOS blocks it at first launch, run: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -cr "/Applications/DevOpster.app"</code></li>
                 </ol>
               </div>
               <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);padding:18px 20px;">
@@ -1116,7 +1129,7 @@
 
         function pickAssets(assets, platform) {
           var rules = {
-            macos: [/.dmg$/i, /\.app\.tar\.gz$/i, /macos-install\.command$/i, /macos-install\.sh$/i, /macos.*\.zip$/i, /darwin.*\.zip$/i],
+            macos: [/.dmg$/i, /\.app\.tar\.gz$/i, /macos.*\.zip$/i, /darwin.*\.zip$/i],
             windows: [/-setup\.exe$/i, /\.msi$/i, /\.exe$/i, /windows.*\.zip$/i, /win.*\.zip$/i, /\.zip$/i],
             linux: [/\.AppImage$/i, /\.deb$/i, /\.rpm$/i, /linux.*\.tar\.gz$/i, /\.tar\.gz$/i]
           };

@@ -18,3 +18,11 @@ Thumbs.db
 *.tmp
 *.temp
 .devopster_open_url
+
+# Tauri-generated app icons (regenerated at build time from devopster-icon.png)
+assets/icons/32x32.png
+assets/icons/128x128.png
+assets/icons/128x128@2x.png
+assets/icons/icon.ico
+assets/icons/icon.icns
+src-tauri/icons/
