@@ -854,13 +854,14 @@
                   <p class="platform-subtitle">DMG first, .app.tar.gz fallback</p>
                 </div>
               </div>
-              <p class="platform-desc">Best for end users who want the normal drag-to-Applications install flow.</p>
+              <p class="platform-desc">Drag the .dmg to /Applications manually, or download <code>DevOpster-macos-install.command</code> and double-click it for a guided install.</p>
               <a class="download-label" id="dl-btn-macos" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Download DevOpster for macOS">↓ Download for macOS</a>
               <div class="asset-files" id="assets-macos"></div>
               <p class="platform-tip">
-                <strong>Gatekeeper:</strong> install from the <code>.dmg</code> when possible — drag <code>DevOpster.app</code> to <code>/Applications</code>, then open it normally. If macOS blocks it at first launch, run once:
+                <strong>Easiest:</strong> download <code>DevOpster-macos-install.command</code> from the file list below, then double-click it in Finder. It will handle quarantine removal and guide you through install.
+                <br/><strong>Manual:</strong> drag <code>DevOpster.app</code> from the .dmg into <code>/Applications</code>.
+                <br/><strong>Gatekeeper:</strong> if macOS blocks it at first launch:
                 <span class="copy-cmd" style="display:flex;align-items:center;gap:8px;margin-top:6px;"><code>xattr -cr "/Applications/DevOpster.app"</code><button type="button" class="copy-btn" data-copy='xattr -cr "/Applications/DevOpster.app"'>Copy</button></span>
-                then reopen the app.
               </p>
             </article>
 
