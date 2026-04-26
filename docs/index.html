@@ -466,6 +466,7 @@
         color: var(--fg);
       }
       .platform-card .platform-icon svg { width: 100%; height: 100%; display: block; }
+      .platform-card .platform-icon img { width: 100%; height: 100%; display: block; object-fit: contain; }
       .platform-icon--macos { color: #111111; }
       .platform-icon--windows { color: #0f6cbd; }
       .platform-icon--linux { color: #111111; }
@@ -718,7 +719,7 @@
             <img src="https://github.com/Cloud2BR/devopster-cli/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status" loading="lazy" />
           </a>
           <!-- START BADGE -->
-          <span class="badge-link"><img src="https://img.shields.io/badge/Total%20views-54-limegreen" alt="Total views" loading="lazy" /></span>
+          <span class="badge-link"><img src="https://img.shields.io/badge/Total%20views-216-limegreen" alt="Total views" loading="lazy" /></span>
           <!-- END BADGE -->
           <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
         </div>
@@ -833,31 +834,26 @@
           <div class="platform-grid">
             <article class="platform-card" aria-label="DevOpster macOS download">
               <span class="platform-icon platform-icon--macos" aria-hidden="true">
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M30.085 10.5C28.96 11.875 27.12 12.942 25.28 12.792C25.042 10.993 25.955 9.128 27.019 7.86C28.195 6.46 30.215 5.479 31.84 5.4C31.982 7.291 31.298 9.08 30.085 10.5Z" fill="currentColor"/>
-                  <path d="M38.722 31.918C37.896 33.781 37.502 34.612 36.438 36.304C34.954 38.667 32.861 41.615 30.259 41.641C27.953 41.661 27.357 40.131 24.228 40.15C21.099 40.168 20.445 41.669 18.139 41.646C15.537 41.62 13.555 38.958 12.072 36.595C7.923 29.975 7.487 22.21 10.048 18.264C11.868 15.46 14.742 13.814 17.441 13.814C20.192 13.814 21.924 15.337 24.195 15.337C26.398 15.337 27.74 13.81 30.926 13.81C33.331 13.81 35.877 15.119 37.691 17.374C31.743 20.633 32.708 29.17 38.722 31.918Z" fill="currentColor"/>
-                </svg>
+                <img src="https://cdn.simpleicons.org/apple/111111" alt="" loading="lazy" decoding="async" />
               </span>
               <h3>macOS</h3>
               <p class="formats">.dmg recommended &nbsp;·&nbsp; .tar.gz advanced</p>
               <a class="download-label" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster macOS download">↓ Download for macOS</a>
               <div class="asset-files" id="assets-macos"></div>
               <ol class="platform-steps">
-                <li class="platform-note"><strong>Step 1:</strong> Download the latest <strong>.dmg</strong> and drag <code>DevOpster.app</code> to <code>/Applications</code>.</li>
-                <li class="platform-note"><strong>Step 2:</strong> Try opening the app. If Gatekeeper blocks it, run this once:
-                  <div class="copy-cmd"><code>xattr -cr "/Applications/DevOpster.app"</code><button type="button" class="copy-btn" data-copy='xattr -cr "/Applications/DevOpster.app"'>Copy</button></div>
+                <li class="platform-note"><strong>Step 1:</strong> Download the latest <strong>.dmg</strong> and drag <code>DevOpster.app</code> to <code>/Applications</code> (recommended) or any folder you prefer, for example <code>~/Applications</code>.</li>
+                <li class="platform-note"><strong>Step 2:</strong> Optional one-click installer from release assets:
+                  <div class="copy-cmd"><code>chmod +x ./DevOpster-macos-install.sh &amp;&amp; ./DevOpster-macos-install.sh</code><button type="button" class="copy-btn" data-copy='chmod +x ./DevOpster-macos-install.sh && ./DevOpster-macos-install.sh'>Copy</button></div>
                 </li>
-                <li class="platform-note"><strong>Step 3:</strong> Open <code>DevOpster.app</code> again and continue setup.</li>
+                <li class="platform-note"><strong>Step 3:</strong> For stable releases, open normally. If Gatekeeper blocks a prerelease, run this once using your install path:
+                  <div class="copy-cmd"><code>APP_PATH="$HOME/Applications/DevOpster.app"; xattr -cr "$APP_PATH"</code><button type="button" class="copy-btn" data-copy='APP_PATH="$HOME/Applications/DevOpster.app"; xattr -cr "$APP_PATH"'>Copy</button></div>
+                </li>
+                <li class="platform-note"><strong>Step 4:</strong> Open <code>DevOpster.app</code> again. Signed and notarized builds should launch without warnings.</li>
               </ol>
             </article>
             <article class="platform-card" aria-label="DevOpster Windows download">
               <span class="platform-icon platform-icon--windows" aria-hidden="true">
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M6 10L22 8V22H6V10Z" fill="currentColor"/>
-                  <path d="M26 7L42 5V22H26V7Z" fill="currentColor" opacity="0.88"/>
-                  <path d="M6 26H22V40L6 38V26Z" fill="currentColor" opacity="0.88"/>
-                  <path d="M26 26H42V43L26 41V26Z" fill="currentColor"/>
-                </svg>
+                <img src="https://cdn.simpleicons.org/windows/0f6cbd" alt="" loading="lazy" decoding="async" />
               </span>
               <h3>Windows</h3>
               <p class="formats">.zip + .ico &nbsp;·&nbsp; <code>DevOpster-GUI.cmd</code></p>
@@ -873,15 +869,7 @@
             </article>
             <article class="platform-card" aria-label="DevOpster Linux download">
               <span class="platform-icon platform-icon--linux" aria-hidden="true">
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M24.049 7C19.979 7 17.421 10.306 17.421 14.604C17.421 16.2 17.721 17.314 18.384 18.801C15.591 20.442 13.837 23.989 13.837 28.455C13.837 34.781 18.159 41 24.049 41C29.939 41 34.261 34.781 34.261 28.455C34.261 24.002 32.49 20.445 29.714 18.805C30.376 17.329 30.676 16.214 30.676 14.604C30.676 10.306 28.118 7 24.049 7Z" fill="currentColor"/>
-                  <ellipse cx="21.2" cy="14.8" rx="1.35" ry="1.75" fill="#ffffff"/>
-                  <ellipse cx="26.8" cy="14.8" rx="1.35" ry="1.75" fill="#ffffff"/>
-                  <ellipse cx="21.2" cy="15.15" rx="0.48" ry="0.62" fill="#111111"/>
-                  <ellipse cx="26.8" cy="15.15" rx="0.48" ry="0.62" fill="#111111"/>
-                  <path d="M22.5 18.55C23.157 18.879 24.856 18.879 25.512 18.55" stroke="#F59E0B" stroke-width="1.7" stroke-linecap="round"/>
-                  <path d="M16 35.2C18.014 34.099 19.155 33.804 21.075 33.804C22.41 33.804 23.179 34.285 24.032 34.285C24.885 34.285 25.652 33.804 26.988 33.804C28.907 33.804 30.047 34.099 32.061 35.2" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round"/>
-                </svg>
+                <img src="https://cdn.simpleicons.org/linux/FCC624" alt="" loading="lazy" decoding="async" />
               </span>
               <h3>Linux</h3>
               <p class="formats">.tar.gz &nbsp;·&nbsp; .desktop &nbsp;·&nbsp; AppStream</p>
@@ -1056,7 +1044,7 @@
 
         function pickAssets(assets, platform) {
           var rules = {
-            macos: [/.dmg$/i, /\.app\.tar\.gz$/i, /macos.*\.zip$/i, /darwin.*\.zip$/i],
+            macos: [/.dmg$/i, /\.app\.tar\.gz$/i, /macos-install\.sh$/i, /macos.*\.zip$/i, /darwin.*\.zip$/i],
             windows: [/-setup\.exe$/i, /\.msi$/i, /\.exe$/i, /windows.*\.zip$/i, /win.*\.zip$/i, /\.zip$/i],
             linux: [/\.AppImage$/i, /\.deb$/i, /\.rpm$/i, /linux.*\.tar\.gz$/i, /\.tar\.gz$/i]
           };

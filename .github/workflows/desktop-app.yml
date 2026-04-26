@@ -106,10 +106,96 @@ jobs:
       - name: Build Tauri bundle
         run: cargo tauri build --target ${{ matrix.target }}
 
+      - name: Import Apple signing certificate
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_SIGNING_CERT_B64: ${{ secrets.APPLE_SIGNING_CERT_B64 }}
+          APPLE_SIGNING_CERT_PASSWORD: ${{ secrets.APPLE_SIGNING_CERT_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APPLE_SIGNING_CERT_B64:-}" ] || [ -z "${APPLE_SIGNING_CERT_PASSWORD:-}" ]; then
+            echo "Apple signing cert secrets are not set; skipping Developer ID import."
+            exit 0
+          fi
+          KEYCHAIN_PASSWORD="${KEYCHAIN_PASSWORD:-temp-keychain-pass}"
+          echo "$APPLE_SIGNING_CERT_B64" | base64 --decode > signing-cert.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          security import signing-cert.p12 -k build.keychain -P "$APPLE_SIGNING_CERT_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+
+      - name: Sign macOS app and DMG (Developer ID)
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APPLE_SIGNING_IDENTITY:-}" ]; then
+            echo "APPLE_SIGNING_IDENTITY is not set; skipping Developer ID signing."
+            exit 0
+          fi
+          BUNDLE_ROOT="src-tauri/target/${{ matrix.target }}/release/bundle"
+          if [ -d "$BUNDLE_ROOT/macos" ]; then
+            for app in "$BUNDLE_ROOT/macos"/*.app; do
+              [ -d "$app" ] || continue
+              echo "codesign app: $app"
+              codesign --force --deep --options runtime --timestamp --sign "$APPLE_SIGNING_IDENTITY" "$app"
+              codesign --verify --deep --strict --verbose=2 "$app"
+            done
+          fi
+          if [ -d "$BUNDLE_ROOT/dmg" ]; then
+            for dmg in "$BUNDLE_ROOT/dmg"/*.dmg; do
+              [ -f "$dmg" ] || continue
+              echo "codesign dmg: $dmg"
+              codesign --force --timestamp --sign "$APPLE_SIGNING_IDENTITY" "$dmg"
+            done
+          fi
+
+      - name: Notarize and staple DMG
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APPLE_ID:-}" ] || [ -z "${APPLE_TEAM_ID:-}" ] || [ -z "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]; then
+            echo "Apple notarization secrets are not set; skipping notarization."
+            exit 0
+          fi
+          BUNDLE_ROOT="src-tauri/target/${{ matrix.target }}/release/bundle/dmg"
+          if [ -d "$BUNDLE_ROOT" ]; then
+            for dmg in "$BUNDLE_ROOT"/*.dmg; do
+              [ -f "$dmg" ] || continue
+              echo "notarizing: $dmg"
+              xcrun notarytool submit "$dmg" \
+                --apple-id "$APPLE_ID" \
+                --team-id "$APPLE_TEAM_ID" \
+                --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+                --wait
+              xcrun stapler staple "$dmg"
+              xcrun stapler validate "$dmg"
+            done
+          fi
+
       - name: Ad-hoc codesign macOS bundle
         if: runner.os == 'macOS'
         shell: bash
+        env:
+          APPLE_SIGNING_CERT_B64: ${{ secrets.APPLE_SIGNING_CERT_B64 }}
+          APPLE_SIGNING_CERT_PASSWORD: ${{ secrets.APPLE_SIGNING_CERT_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
+          if [ -n "${APPLE_SIGNING_CERT_B64:-}" ] && [ -n "${APPLE_SIGNING_CERT_PASSWORD:-}" ] && [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
+            echo "Developer ID signing is configured; skipping ad-hoc codesign fallback."
+            exit 0
+          fi
           # Apple Silicon and modern Intel macOS refuse to launch unsigned
           # apps with the cryptic "DevOpster.app is damaged" alert. An ad-hoc
           # signature (sign identity "-") satisfies the loader so the app
@@ -143,6 +229,10 @@ jobs:
                  -o -name "*.msi" -o -name "*-setup.exe" \
                  -o -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm" \) \
               -exec cp {} dist/ \; || true
+          fi
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            cp scripts/install-macos-app.sh dist/DevOpster-macos-install.sh
+            chmod +x dist/DevOpster-macos-install.sh
           fi
           ls -la dist || true
 
@@ -197,9 +287,89 @@ jobs:
       - name: Build Tauri bundle
         run: cargo tauri build --target x86_64-apple-darwin
 
+      - name: Import Apple signing certificate
+        shell: bash
+        env:
+          APPLE_SIGNING_CERT_B64: ${{ secrets.APPLE_SIGNING_CERT_B64 }}
+          APPLE_SIGNING_CERT_PASSWORD: ${{ secrets.APPLE_SIGNING_CERT_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APPLE_SIGNING_CERT_B64:-}" ] || [ -z "${APPLE_SIGNING_CERT_PASSWORD:-}" ]; then
+            echo "Apple signing cert secrets are not set; skipping Developer ID import."
+            exit 0
+          fi
+          KEYCHAIN_PASSWORD="${KEYCHAIN_PASSWORD:-temp-keychain-pass}"
+          echo "$APPLE_SIGNING_CERT_B64" | base64 --decode > signing-cert.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          security import signing-cert.p12 -k build.keychain -P "$APPLE_SIGNING_CERT_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+
+      - name: Sign macOS app and DMG (Developer ID)
+        shell: bash
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APPLE_SIGNING_IDENTITY:-}" ]; then
+            echo "APPLE_SIGNING_IDENTITY is not set; skipping Developer ID signing."
+            exit 0
+          fi
+          BUNDLE_ROOT="src-tauri/target/x86_64-apple-darwin/release/bundle"
+          if [ -d "$BUNDLE_ROOT/macos" ]; then
+            for app in "$BUNDLE_ROOT/macos"/*.app; do
+              [ -d "$app" ] || continue
+              codesign --force --deep --options runtime --timestamp --sign "$APPLE_SIGNING_IDENTITY" "$app"
+              codesign --verify --deep --strict --verbose=2 "$app"
+            done
+          fi
+          if [ -d "$BUNDLE_ROOT/dmg" ]; then
+            for dmg in "$BUNDLE_ROOT/dmg"/*.dmg; do
+              [ -f "$dmg" ] || continue
+              codesign --force --timestamp --sign "$APPLE_SIGNING_IDENTITY" "$dmg"
+            done
+          fi
+
+      - name: Notarize and staple DMG
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APPLE_ID:-}" ] || [ -z "${APPLE_TEAM_ID:-}" ] || [ -z "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]; then
+            echo "Apple notarization secrets are not set; skipping notarization."
+            exit 0
+          fi
+          BUNDLE_ROOT="src-tauri/target/x86_64-apple-darwin/release/bundle/dmg"
+          if [ -d "$BUNDLE_ROOT" ]; then
+            for dmg in "$BUNDLE_ROOT"/*.dmg; do
+              [ -f "$dmg" ] || continue
+              xcrun notarytool submit "$dmg" \
+                --apple-id "$APPLE_ID" \
+                --team-id "$APPLE_TEAM_ID" \
+                --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+                --wait
+              xcrun stapler staple "$dmg"
+              xcrun stapler validate "$dmg"
+            done
+          fi
+
       - name: Ad-hoc codesign macOS bundle
         shell: bash
+        env:
+          APPLE_SIGNING_CERT_B64: ${{ secrets.APPLE_SIGNING_CERT_B64 }}
+          APPLE_SIGNING_CERT_PASSWORD: ${{ secrets.APPLE_SIGNING_CERT_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
+          if [ -n "${APPLE_SIGNING_CERT_B64:-}" ] && [ -n "${APPLE_SIGNING_CERT_PASSWORD:-}" ] && [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
+            echo "Developer ID signing is configured; skipping ad-hoc codesign fallback."
+            exit 0
+          fi
           BUNDLE_ROOT="src-tauri/target/x86_64-apple-darwin/release/bundle"
           if [ -d "$BUNDLE_ROOT/macos" ]; then
             for app in "$BUNDLE_ROOT/macos"/*.app; do
@@ -226,6 +396,8 @@ jobs:
               \( -name "*.dmg" -o -name "*.app.tar.gz" \) \
               -exec cp {} dist/ \; || true
           fi
+          cp scripts/install-macos-app.sh dist/DevOpster-macos-install.sh
+          chmod +x dist/DevOpster-macos-install.sh
           ls -la dist || true
 
       - name: Upload artifacts
@@ -252,12 +424,69 @@ jobs:
           find artifacts -type f -exec cp {} flat/ \;
           ls -la flat
 
+      - name: Compute release metadata
+        id: release_meta
+        shell: bash
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            TAG_NAME="${{ inputs.release_tag }}"
+          else
+            TAG_NAME="${GITHUB_REF_NAME}"
+          fi
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "release_name=DevOpster Desktop ${TAG_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Delete existing release if present
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.release_meta.outputs.tag_name }}"
+          gh release delete "${TAG}" --repo "${{ github.repository }}" --yes 2>/dev/null \
+            && echo "Deleted existing release for ${TAG}." \
+            || echo "No existing release for ${TAG}, creating fresh."
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
+          tag_name: ${{ steps.release_meta.outputs.tag_name }}
           files: flat/*
-          generate_release_notes: true
-          name: DevOpster Desktop ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
+          fail_on_unmatched_files: true
+          name: ${{ steps.release_meta.outputs.release_name }}
+          body: |
+            ## Install DevOpster Desktop ${{ steps.release_meta.outputs.tag_name }}
+
+            Download the installer that matches your OS.
+
+            | Platform | File | Install notes |
+            |---|---|---|
+            | **macOS** | `*.dmg` | Recommended. Drag `DevOpster.app` to `/Applications` or `~/Applications` |
+            | **macOS** | `*.app.tar.gz` | Advanced/manual extraction |
+            | **macOS** | `DevOpster-macos-install.sh` | One-click installer script (path-aware + quarantine clear) |
+            | **Windows** | `*-setup.exe` | Recommended NSIS installer |
+            | **Windows** | `*.msi` | MSI deployment/install option |
+            | **Linux** | `*.AppImage` | `chmod +x DevOpster*.AppImage && ./DevOpster*.AppImage` |
+            | **Linux** | `*.deb` | `sudo apt install ./DevOpster*.deb` |
+            | **Linux** | `*.rpm` | `sudo rpm -i DevOpster*.rpm` |
+
+            ### macOS trust and verification
+
+            - Stable releases are signed and notarized when Apple credentials are configured in CI.
+            - You can run the one-click installer from the mounted DMG or extracted assets:
+
+            ```bash
+            chmod +x ./DevOpster-macos-install.sh
+            ./DevOpster-macos-install.sh
+            ```
+
+            - If you are testing an unsigned prerelease build and Gatekeeper blocks launch, run with your chosen install path:
+
+            ```bash
+            APP_PATH="$HOME/Applications/DevOpster.app"
+            xattr -cr "$APP_PATH"
+            ```
+
+            ### Windows SmartScreen
+
+            If SmartScreen appears for an unsigned build, choose **More info** and then **Run anyway**.
           draft: false
           prerelease: ${{ github.event_name == 'workflow_dispatch' }}
