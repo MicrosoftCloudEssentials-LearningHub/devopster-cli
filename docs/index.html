@@ -437,81 +437,98 @@
       .platform-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
+        gap: 16px;
       }
       .platform-grid > * { min-width: 0; }
       .platform-card {
         border: 1px solid var(--border);
         border-radius: var(--radius-lg);
         background: var(--card);
-        padding: 22px 18px;
-        text-align: center;
+        padding: 24px 20px;
+        text-align: left;
         color: var(--fg);
-        display: block;
+        display: flex;
+        flex-direction: column;
         min-width: 0;
-        transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+        transition: border-color 140ms ease, box-shadow 140ms ease;
       }
       .platform-card:hover {
         border-color: var(--link);
         box-shadow: 0 4px 16px color-mix(in oklab, var(--link) 18%, transparent);
-        transform: translateY(-2px);
       }
-      .platform-card .platform-icon {
-        width: 48px;
-        height: 48px;
-        margin: 0 auto 12px;
-        display: inline-flex;
+      .platform-card-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 12px;
+      }
+      .platform-icon {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--fg);
+        margin-top: 2px;
       }
-      .platform-card .platform-icon svg { width: 100%; height: 100%; display: block; }
-      .platform-card .platform-icon img { width: 100%; height: 100%; display: block; object-fit: contain; }
-      .platform-icon--macos { color: #111111; }
+      .platform-icon svg { width: 100%; height: 100%; display: block; }
+      .platform-icon img { width: 100%; height: 100%; display: block; object-fit: contain; }
+      .platform-icon--macos { color: var(--fg); }
       .platform-icon--windows { color: #0f6cbd; }
-      .platform-icon--linux { color: #111111; }
-      .platform-card h3 { margin: 0 0 4px; font-size: 1.05rem; }
-      .platform-card .formats {
+      .platform-icon--linux { color: #FCC624; }
+      .platform-card-title { flex: 1; min-width: 0; }
+      .platform-card-title h3 { margin: 0 0 2px; font-size: 1.1rem; }
+      .platform-subtitle {
+        color: var(--muted);
+        font-size: 0.78rem;
+        margin: 0;
+        font-weight: 500;
+      }
+      .platform-desc {
         color: var(--muted);
         font-size: 0.85rem;
-        margin: 0 0 16px;
+        margin: 0 0 14px;
+        line-height: 1.5;
       }
       .download-label {
-        display: inline-flex;
+        display: flex;
         align-items: center;
         justify-content: center;
         gap: 6px;
-        padding: 9px 20px;
+        padding: 10px 16px;
         border-radius: var(--radius);
         background: var(--link);
         color: #ffffff;
         font-weight: 600;
         font-size: 0.88rem;
         text-decoration: none;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 10px;
       }
       .download-label:focus-visible {
         outline: 2px solid var(--link);
         outline-offset: 3px;
       }
       .asset-files {
-        margin-top: 10px;
         display: grid;
-        gap: 8px;
+        gap: 6px;
+        margin-bottom: 12px;
       }
       .asset-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        border-radius: 10px;
+        border-radius: 8px;
         background: color-mix(in oklab, var(--surface) 72%, var(--card));
-        padding: 10px 12px;
+        padding: 8px 12px;
         font-size: 0.82rem;
       }
       .asset-row a {
         color: var(--link);
         text-decoration: none;
-        font-weight: 600;
+        font-weight: 500;
         overflow-wrap: anywhere;
       }
       .asset-row a:hover { text-decoration: underline; }
@@ -519,41 +536,33 @@
         color: var(--muted);
         flex-shrink: 0;
         font-variant-numeric: tabular-nums;
+        font-size: 0.78rem;
       }
       .asset-empty {
+        border-radius: 8px;
+        background: color-mix(in oklab, var(--surface) 72%, var(--card));
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      .platform-tip {
+        margin: auto 0 0;
+        padding: 10px 12px;
         border-radius: 10px;
         background: color-mix(in oklab, var(--surface) 72%, var(--card));
-        padding: 10px 12px;
-        font-size: 0.8rem;
         color: var(--muted);
-        text-align: left;
+        font-size: 0.79rem;
+        line-height: 1.55;
       }
-      .platform-steps {
-        margin: 14px 0 0;
-        padding: 0;
-        list-style: none;
-        text-align: left;
-        display: grid;
-        gap: 8px;
-      }
-      .platform-note {
-        margin: 0;
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: color-mix(in oklab, var(--surface) 72%, var(--card));
-        color: var(--muted);
-        font-size: 0.8rem;
-        line-height: 1.5;
-        text-align: left;
-        min-width: 0;
-      }
-      .platform-note strong { color: var(--fg); }
-      .platform-note code {
+      .platform-tip strong { color: var(--fg); }
+      .platform-tip code {
         background: color-mix(in oklab, var(--surface2) 80%, var(--card));
-        padding: 2px 6px;
-        border-radius: 6px;
-        font-size: 0.9em;
+        padding: 1px 5px;
+        border-radius: 5px;
+        font-size: 0.88em;
       }
+      /* legacy .platform-note kept for compat */
+      .platform-note { display: none; }
       .platform-note .copy-cmd {
         width: 100%;
         box-sizing: border-box;
@@ -822,82 +831,130 @@
       <!-- ── Download installers ── -->
       <section id="download">
         <div class="container">
-          <p class="section-kicker">For end users</p>
-          <h2>Download DevOpster</h2>
+          <p class="section-kicker">Artifacts</p>
+          <h2>Choose your platform</h2>
           <p class="section-copy">
-            Grab the latest installer for your operating system. Builds publish
-            automatically to GitHub Releases when a version tag (<code>v*</code>) is
-            pushed or when the release workflow runs manually.
+            Each card shows the preferred download first, then the remaining release files for that platform.
+            Installation notes stay with the relevant operating system.
           </p>
-          <p class="section-copy" id="release-status">Loading release assets...</p>
+          <p id="release-status" style="font-size:0.82rem;color:var(--muted);margin:0 0 16px;"></p>
 
           <div class="platform-grid">
+            <!-- macOS -->
             <article class="platform-card" aria-label="DevOpster macOS download">
-              <span class="platform-icon platform-icon--macos" aria-hidden="true">
-                <img src="https://cdn.simpleicons.org/apple/111111" alt="" loading="lazy" decoding="async" />
-              </span>
-              <h3>macOS</h3>
-              <p class="formats">.dmg recommended &nbsp;·&nbsp; .tar.gz advanced</p>
-              <a class="download-label" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster macOS download">↓ Download for macOS</a>
+              <div class="platform-card-header">
+                <span class="platform-icon platform-icon--macos" aria-hidden="true">
+                  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M30.085 10.5C28.96 11.875 27.12 12.942 25.28 12.792C25.042 10.993 25.955 9.128 27.019 7.86C28.195 6.46 30.215 5.479 31.84 5.4C31.982 7.291 31.298 9.08 30.085 10.5Z" fill="currentColor"/>
+                    <path d="M38.722 31.918C37.896 33.781 37.502 34.612 36.438 36.304C34.954 38.667 32.861 41.615 30.259 41.641C27.953 41.661 27.357 40.131 24.228 40.15C21.099 40.168 20.445 41.669 18.139 41.646C15.537 41.62 13.555 38.958 12.072 36.595C7.923 29.975 7.487 22.21 10.048 18.264C11.868 15.46 14.742 13.814 17.441 13.814C20.192 13.814 21.924 15.337 24.195 15.337C26.398 15.337 27.74 13.81 30.926 13.81C33.331 13.81 35.877 15.119 37.691 17.374C31.743 20.633 32.708 29.17 38.722 31.918Z" fill="currentColor"/>
+                  </svg>
+                </span>
+                <div class="platform-card-title">
+                  <h3>macOS</h3>
+                  <p class="platform-subtitle">DMG first, .app.tar.gz fallback</p>
+                </div>
+              </div>
+              <p class="platform-desc">Best for end users who want the normal drag-to-Applications install flow.</p>
+              <a class="download-label" id="dl-btn-macos" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Download DevOpster for macOS">↓ Download for macOS</a>
               <div class="asset-files" id="assets-macos"></div>
-              <ol class="platform-steps">
-                <li class="platform-note"><strong>Step 1:</strong> Download the latest <strong>.dmg</strong> and drag <code>DevOpster.app</code> to <code>/Applications</code> (recommended) or any folder you prefer, for example <code>~/Applications</code>.</li>
-                <li class="platform-note"><strong>Step 2:</strong> If macOS blocks opening the downloaded DMG, run:
-                  <div class="copy-cmd"><code>DMG_PATH="$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"; xattr -dr com.apple.quarantine "$DMG_PATH"; open "$DMG_PATH"</code><button type="button" class="copy-btn" data-copy='DMG_PATH="$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"; xattr -dr com.apple.quarantine "$DMG_PATH"; open "$DMG_PATH"'>Copy</button></div>
-                </li>
-                <li class="platform-note"><strong>Step 3:</strong> Easiest install: download <code>DevOpster-macos-install.command</code> from release assets and double-click it. It guides you and lets you choose install location.</li>
-                <li class="platform-note"><strong>Step 4:</strong> Terminal installer option:
-                  <div class="copy-cmd"><code>chmod +x ./DevOpster-macos-install.sh &amp;&amp; ./DevOpster-macos-install.sh "$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"</code><button type="button" class="copy-btn" data-copy='chmod +x ./DevOpster-macos-install.sh && ./DevOpster-macos-install.sh "$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"'>Copy</button></div>
-                </li>
-                <li class="platform-note"><strong>Step 5:</strong> For stable releases, open normally. If Gatekeeper blocks a prerelease, run this once using your install path:
-                  <div class="copy-cmd"><code>APP_PATH="$HOME/Applications/DevOpster.app"; xattr -cr "$APP_PATH"</code><button type="button" class="copy-btn" data-copy='APP_PATH="$HOME/Applications/DevOpster.app"; xattr -cr "$APP_PATH"'>Copy</button></div>
-                </li>
-                <li class="platform-note"><strong>Step 6:</strong> Open <code>DevOpster.app</code> again. Signed and notarized builds should launch without warnings.</li>
-              </ol>
+              <p class="platform-tip">
+                <strong>Gatekeeper:</strong> install from the <code>.dmg</code> when possible — drag <code>DevOpster.app</code> to <code>/Applications</code>, then open it normally. If macOS blocks it at first launch, run once:
+                <span class="copy-cmd" style="display:flex;align-items:center;gap:8px;margin-top:6px;"><code>xattr -cr "/Applications/DevOpster.app"</code><button type="button" class="copy-btn" data-copy='xattr -cr "/Applications/DevOpster.app"'>Copy</button></span>
+                then reopen the app.
+              </p>
             </article>
+
+            <!-- Windows -->
             <article class="platform-card" aria-label="DevOpster Windows download">
-              <span class="platform-icon platform-icon--windows" aria-hidden="true">
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M5 8.5L22 6.2V22H5V8.5Z" fill="currentColor"/>
-                  <path d="M26 5.7L43 3.4V22H26V5.7Z" fill="currentColor" opacity="0.9"/>
-                  <path d="M5 26H22V41.8L5 39.5V26Z" fill="currentColor" opacity="0.9"/>
-                  <path d="M26 26H43V44.6L26 42.3V26Z" fill="currentColor"/>
-                </svg>
-              </span>
-              <h3>Windows</h3>
-              <p class="formats">-setup.exe recommended &nbsp;·&nbsp; .msi alternative</p>
-              <a class="download-label" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster Windows download">↓ Download for Windows</a>
+              <div class="platform-card-header">
+                <span class="platform-icon platform-icon--windows" aria-hidden="true">
+                  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 8.5L22 6.2V22H5V8.5Z" fill="currentColor"/>
+                    <path d="M26 5.7L43 3.4V22H26V5.7Z" fill="currentColor"/>
+                    <path d="M5 26H22V41.8L5 39.5V26Z" fill="currentColor"/>
+                    <path d="M26 26H43V44.6L26 42.3V26Z" fill="currentColor"/>
+                  </svg>
+                </span>
+                <div class="platform-card-title">
+                  <h3>Windows</h3>
+                  <p class="platform-subtitle">NSIS installer first, MSI alternative</p>
+                </div>
+              </div>
+              <p class="platform-desc">Best for Windows users who want a standard installer or an MSI deployment option.</p>
+              <a class="download-label" id="dl-btn-windows" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Download DevOpster for Windows">↓ Download for Windows</a>
               <div class="asset-files" id="assets-windows"></div>
-              <ol class="platform-steps">
-                <li class="platform-note"><strong>Step 1:</strong> Download <code>*-setup.exe</code> (or <code>.msi</code> if your organization prefers MSI).</li>
-                <li class="platform-note"><strong>Step 2:</strong> Run the installer and choose the install folder you want.</li>
-                <li class="platform-note"><strong>Step 3:</strong> If SmartScreen appears, click <strong>More info</strong> then <strong>Run anyway</strong>.</li>
-              </ol>
+              <p class="platform-tip">
+                <strong>SmartScreen:</strong> if Windows shows a warning, click <strong>More info</strong> and then <strong>Run anyway</strong> because the installer is not code-signed yet.
+              </p>
             </article>
+
+            <!-- Linux -->
             <article class="platform-card" aria-label="DevOpster Linux download">
-              <span class="platform-icon platform-icon--linux" aria-hidden="true">
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M24.049 7C19.979 7 17.421 10.306 17.421 14.604C17.421 16.2 17.721 17.314 18.384 18.801C15.591 20.442 13.837 23.989 13.837 28.455C13.837 34.781 18.159 41 24.049 41C29.939 41 34.261 34.781 34.261 28.455C34.261 24.002 32.49 20.445 29.714 18.805C30.376 17.329 30.676 16.214 30.676 14.604C30.676 10.306 28.118 7 24.049 7Z" fill="currentColor"/>
-                  <ellipse cx="21.2" cy="14.8" rx="1.35" ry="1.75" fill="#ffffff"/>
-                  <ellipse cx="26.8" cy="14.8" rx="1.35" ry="1.75" fill="#ffffff"/>
-                  <ellipse cx="21.2" cy="15.15" rx="0.48" ry="0.62" fill="#111111"/>
-                  <ellipse cx="26.8" cy="15.15" rx="0.48" ry="0.62" fill="#111111"/>
-                  <path d="M22.5 18.55C23.157 18.879 24.856 18.879 25.512 18.55" stroke="#F59E0B" stroke-width="1.7" stroke-linecap="round"/>
-                  <path d="M16 35.2C18.014 34.099 19.155 33.804 21.075 33.804C22.41 33.804 23.179 34.285 24.032 34.285C24.885 34.285 25.652 33.804 26.988 33.804C28.907 33.804 30.047 34.099 32.061 35.2" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round"/>
-                </svg>
-              </span>
-              <h3>Linux</h3>
-              <p class="formats">.AppImage &nbsp;·&nbsp; .deb &nbsp;·&nbsp; .rpm</p>
-              <a class="download-label" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Open DevOpster Linux download">↓ Download for Linux</a>
+              <div class="platform-card-header">
+                <span class="platform-icon platform-icon--linux" aria-hidden="true">
+                  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M24.049 7C19.979 7 17.421 10.306 17.421 14.604C17.421 16.2 17.721 17.314 18.384 18.801C15.591 20.442 13.837 23.989 13.837 28.455C13.837 34.781 18.159 41 24.049 41C29.939 41 34.261 34.781 34.261 28.455C34.261 24.002 32.49 20.445 29.714 18.805C30.376 17.329 30.676 16.214 30.676 14.604C30.676 10.306 28.118 7 24.049 7Z" fill="currentColor"/>
+                    <ellipse cx="21.2" cy="14.8" rx="1.35" ry="1.75" fill="#ffffff"/>
+                    <ellipse cx="26.8" cy="14.8" rx="1.35" ry="1.75" fill="#ffffff"/>
+                    <ellipse cx="21.2" cy="15.15" rx="0.48" ry="0.62" fill="#111111"/>
+                    <ellipse cx="26.8" cy="15.15" rx="0.48" ry="0.62" fill="#111111"/>
+                    <path d="M22.5 18.55C23.157 18.879 24.856 18.879 25.512 18.55" stroke="#E88800" stroke-width="1.7" stroke-linecap="round"/>
+                    <path d="M16 35.2C18.014 34.099 19.155 33.804 21.075 33.804C22.41 33.804 23.179 34.285 24.032 34.285C24.885 34.285 25.652 33.804 26.988 33.804C28.907 33.804 30.047 34.099 32.061 35.2" stroke="#E88800" stroke-width="2.2" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <div class="platform-card-title">
+                  <h3>Linux</h3>
+                  <p class="platform-subtitle">AppImage, DEB, or RPM</p>
+                </div>
+              </div>
+              <p class="platform-desc">Choose the package style that matches your distro and whether you want a portable build.</p>
+              <a class="download-label" id="dl-btn-linux" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Download DevOpster for Linux">↓ Download for Linux</a>
               <div class="asset-files" id="assets-linux"></div>
-              <ol class="platform-steps">
-                <li class="platform-note"><strong>Step 1:</strong> Download the Linux package you prefer (<code>.deb</code>, <code>.AppImage</code>, or <code>.rpm</code>).</li>
-                <li class="platform-note"><strong>Step 2:</strong> AppImage quick run:
-                  <div class="copy-cmd"><code>chmod +x DevOpster_*.AppImage &amp;&amp; ./DevOpster_*.AppImage</code><button type="button" class="copy-btn" data-copy="chmod +x DevOpster_*.AppImage && ./DevOpster_*.AppImage">Copy</button></div>
-                </li>
-                <li class="platform-note"><strong>Step 3:</strong> Package install shortcuts: <code>sudo apt install ./DevOpster_*.deb</code> or <code>sudo rpm -i DevOpster-*.rpm</code>.</li>
-              </ol>
+              <p class="platform-tip">
+                <strong>Linux tip:</strong> AppImage builds usually need <code>chmod +x</code> before running. DEB builds install cleanly with <code>sudo apt install ./file.deb</code>. RPM: <code>sudo rpm -i ./file.rpm</code>.
+              </p>
             </article>
+          </div>
+
+          <!-- Install guide -->
+          <div style="margin-top:32px;">
+            <p class="section-kicker">Install Guide</p>
+            <h2 style="margin:4px 0 8px;">How to download, install, and use it</h2>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:16px;">
+              <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);padding:18px 20px;">
+                <p style="font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px;">
+                  <span aria-hidden="true" style="font-size:1.1em;"></span> macOS
+                </p>
+                <ol style="margin:0;padding-left:18px;color:var(--muted);font-size:0.84rem;line-height:1.7;">
+                  <li>Download the latest DMG from the macOS card.</li>
+                  <li>Open the disk image and drag <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">DevOpster.app</code> into <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">/Applications</code>.</li>
+                  <li>If macOS blocks it at first launch, open Terminal and run:<br><code style="background:var(--surface2);padding:2px 6px;border-radius:4px;display:inline-block;margin-top:4px;">xattr -cr "/Applications/DevOpster.app"</code></li>
+                  <li>Reopen the app and continue.</li>
+                </ol>
+              </div>
+              <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);padding:18px 20px;">
+                <p style="font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px;">
+                  <span aria-hidden="true" style="font-size:1.1em;">🪟</span> Windows
+                </p>
+                <ol style="margin:0;padding-left:18px;color:var(--muted);font-size:0.84rem;line-height:1.7;">
+                  <li>Download the <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">-setup.exe</code> from the Windows card.</li>
+                  <li>Run the installer and continue through the wizard. Choose install location when prompted.</li>
+                  <li>If SmartScreen appears, click <strong>More info</strong> then <strong>Run anyway</strong>.</li>
+                  <li>Launch DevOpster from the Start menu or desktop shortcut.</li>
+                </ol>
+              </div>
+              <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);padding:18px 20px;">
+                <p style="font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px;">
+                  <span aria-hidden="true" style="font-size:1.1em;">🐧</span> Linux
+                </p>
+                <ol style="margin:0;padding-left:18px;color:var(--muted);font-size:0.84rem;line-height:1.7;">
+                  <li>Choose the artifact that fits your system: AppImage, DEB, or RPM.</li>
+                  <li>For AppImage: <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">chmod +x DevOpster*.AppImage</code> then run it.</li>
+                  <li>For DEB: <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">sudo apt install ./DevOpster*.deb</code></li>
+                  <li>For RPM: <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">sudo rpm -i DevOpster*.rpm</code></li>
+                </ol>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -1094,7 +1151,7 @@
           card.label.href = primary.browser_download_url;
           card.label.textContent = '↓ Download ' + primary.name;
 
-          assets.slice(0, 3).forEach(function (asset) {
+          assets.forEach(function (asset) {
             var row = document.createElement('div');
             row.className = 'asset-row';
 
@@ -1119,7 +1176,8 @@
             throw new Error('No published releases with assets found');
           }
           if (statusEl) {
-            statusEl.innerHTML = 'Showing files from <code>' + rel.tag_name + '</code>.';
+            var published = rel.published_at ? new Date(rel.published_at).toLocaleDateString('en-US', {year:'numeric', month:'short', day:'numeric'}) : '';
+            statusEl.innerHTML = 'Latest published release: <strong>DevOpster ' + rel.tag_name + '</strong>' + (published ? ' &mdash; ' + published : '') + '. Use the platform cards below for direct artifact downloads and install steps.';
           }
 
           var assets = rel.assets || [];
