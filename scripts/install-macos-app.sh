@@ -55,6 +55,34 @@ cleanup_mount() {
   fi
 }
 
+choose_install_dir() {
+  local choice custom_dir
+  echo "Choose install location:"
+  echo "  1) /Applications (all users, requires admin write access)"
+  echo "  2) $HOME/Applications (current user)"
+  echo "  3) Custom path"
+  printf "Select [1-3] (default 2): "
+  read -r choice
+  case "${choice:-2}" in
+    1) INSTALL_DIR="/Applications" ;;
+    2) INSTALL_DIR="$HOME/Applications" ;;
+    3)
+      printf "Enter custom install directory: "
+      read -r custom_dir
+      if [[ -z "${custom_dir}" ]]; then
+        echo "No custom path entered; using $HOME/Applications"
+        INSTALL_DIR="$HOME/Applications"
+      else
+        INSTALL_DIR="${custom_dir}"
+      fi
+      ;;
+    *)
+      echo "Invalid choice; using $HOME/Applications"
+      INSTALL_DIR="$HOME/Applications"
+      ;;
+  esac
+}
+
 trap cleanup_mount EXIT
 
 SOURCE_APP_PATH="${1:-}"
@@ -88,10 +116,14 @@ if [[ ! -d "${SOURCE_APP_PATH}" ]]; then
 fi
 
 if [[ -z "${INSTALL_DIR}" ]]; then
-  if [[ -w "/Applications" ]]; then
-    INSTALL_DIR="/Applications"
+  if [[ -t 0 ]]; then
+    choose_install_dir
   else
-    INSTALL_DIR="$HOME/Applications"
+    if [[ -w "/Applications" ]]; then
+      INSTALL_DIR="/Applications"
+    else
+      INSTALL_DIR="$HOME/Applications"
+    fi
   fi
 fi
 

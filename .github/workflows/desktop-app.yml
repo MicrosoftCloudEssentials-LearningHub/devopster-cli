@@ -233,6 +233,8 @@ jobs:
           if [ "${{ runner.os }}" = "macOS" ]; then
             cp scripts/install-macos-app.sh dist/DevOpster-macos-install.sh
             chmod +x dist/DevOpster-macos-install.sh
+            cp scripts/install-macos-app.command dist/DevOpster-macos-install.command
+            chmod +x dist/DevOpster-macos-install.command
           fi
           ls -la dist || true
 
@@ -398,6 +400,8 @@ jobs:
           fi
           cp scripts/install-macos-app.sh dist/DevOpster-macos-install.sh
           chmod +x dist/DevOpster-macos-install.sh
+          cp scripts/install-macos-app.command dist/DevOpster-macos-install.command
+          chmod +x dist/DevOpster-macos-install.command
           ls -la dist || true
 
       - name: Upload artifacts
@@ -461,6 +465,7 @@ jobs:
             |---|---|---|
             | **macOS** | `*.dmg` | Recommended. Drag `DevOpster.app` to `/Applications` or `~/Applications` |
             | **macOS** | `*.app.tar.gz` | Advanced/manual extraction |
+            | **macOS** | `DevOpster-macos-install.command` | Double-click guided installer (choose install location) |
             | **macOS** | `DevOpster-macos-install.sh` | One-click installer script (path-aware + quarantine clear) |
             | **Windows** | `*-setup.exe` | Recommended NSIS installer |
             | **Windows** | `*.msi` | MSI deployment/install option |
@@ -479,7 +484,8 @@ jobs:
             open "$DMG_PATH"
             ```
 
-            - You can run the one-click installer from the mounted DMG or extracted assets:
+            - Easiest option: double-click `DevOpster-macos-install.command` from Finder.
+            - Terminal option:
 
             ```bash
             chmod +x ./DevOpster-macos-install.sh
