@@ -842,13 +842,16 @@
               <div class="asset-files" id="assets-macos"></div>
               <ol class="platform-steps">
                 <li class="platform-note"><strong>Step 1:</strong> Download the latest <strong>.dmg</strong> and drag <code>DevOpster.app</code> to <code>/Applications</code> (recommended) or any folder you prefer, for example <code>~/Applications</code>.</li>
-                <li class="platform-note"><strong>Step 2:</strong> Optional one-click installer from release assets:
-                  <div class="copy-cmd"><code>chmod +x ./DevOpster-macos-install.sh &amp;&amp; ./DevOpster-macos-install.sh</code><button type="button" class="copy-btn" data-copy='chmod +x ./DevOpster-macos-install.sh && ./DevOpster-macos-install.sh'>Copy</button></div>
+                <li class="platform-note"><strong>Step 2:</strong> If macOS blocks opening the downloaded DMG, run:
+                  <div class="copy-cmd"><code>DMG_PATH="$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"; xattr -dr com.apple.quarantine "$DMG_PATH"; open "$DMG_PATH"</code><button type="button" class="copy-btn" data-copy='DMG_PATH="$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"; xattr -dr com.apple.quarantine "$DMG_PATH"; open "$DMG_PATH"'>Copy</button></div>
                 </li>
-                <li class="platform-note"><strong>Step 3:</strong> For stable releases, open normally. If Gatekeeper blocks a prerelease, run this once using your install path:
+                <li class="platform-note"><strong>Step 3:</strong> Optional one-click installer from release assets:
+                  <div class="copy-cmd"><code>chmod +x ./DevOpster-macos-install.sh &amp;&amp; ./DevOpster-macos-install.sh "$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"</code><button type="button" class="copy-btn" data-copy='chmod +x ./DevOpster-macos-install.sh && ./DevOpster-macos-install.sh "$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"'>Copy</button></div>
+                </li>
+                <li class="platform-note"><strong>Step 4:</strong> For stable releases, open normally. If Gatekeeper blocks a prerelease, run this once using your install path:
                   <div class="copy-cmd"><code>APP_PATH="$HOME/Applications/DevOpster.app"; xattr -cr "$APP_PATH"</code><button type="button" class="copy-btn" data-copy='APP_PATH="$HOME/Applications/DevOpster.app"; xattr -cr "$APP_PATH"'>Copy</button></div>
                 </li>
-                <li class="platform-note"><strong>Step 4:</strong> Open <code>DevOpster.app</code> again. Signed and notarized builds should launch without warnings.</li>
+                <li class="platform-note"><strong>Step 5:</strong> Open <code>DevOpster.app</code> again. Signed and notarized builds should launch without warnings.</li>
               </ol>
             </article>
             <article class="platform-card" aria-label="DevOpster Windows download">

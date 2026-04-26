@@ -2,6 +2,7 @@
 set -euo pipefail
 
 APP_NAME="DevOpster.app"
+MOUNT_DEVICE=""
 
 print_usage() {
   cat <<'EOF'
@@ -10,12 +11,14 @@ Usage:
 
 Examples:
   ./install-macos-app.sh
+  ./install-macos-app.sh "$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"
   ./install-macos-app.sh "/Volumes/devopster-cli/DevOpster.app"
   ./install-macos-app.sh "/Volumes/devopster-cli/DevOpster.app" "$HOME/Applications"
 
 Behavior:
+  - SOURCE_APP_PATH can be a mounted DevOpster.app path or a .dmg file.
   - If SOURCE_APP_PATH is omitted, the script tries to auto-detect DevOpster.app
-    from the current directory and mounted volumes.
+    first, then a DevOpster*.dmg in the current directory or Downloads.
   - If INSTALL_DIR is omitted, it uses /Applications when writable, otherwise
     $HOME/Applications.
 EOF
@@ -36,8 +39,23 @@ detect_source_app() {
     fi
   done
 
+  for candidate in ./DevOpster*.dmg "$HOME"/Downloads/DevOpster*.dmg; do
+    if [[ -f "${candidate}" ]]; then
+      printf '%s\n' "${candidate}"
+      return 0
+    fi
+  done
+
   return 1
 }
+
+cleanup_mount() {
+  if [[ -n "${MOUNT_DEVICE}" ]]; then
+    hdiutil detach "${MOUNT_DEVICE}" -quiet || true
+  fi
+}
+
+trap cleanup_mount EXIT
 
 SOURCE_APP_PATH="${1:-}"
 INSTALL_DIR="${2:-}"
@@ -48,6 +66,19 @@ if [[ -z "${SOURCE_APP_PATH}" ]]; then
     print_usage
     exit 1
   fi
+fi
+
+if [[ -f "${SOURCE_APP_PATH}" && "${SOURCE_APP_PATH}" == *.dmg ]]; then
+  echo "Detected DMG source: ${SOURCE_APP_PATH}"
+  xattr -dr com.apple.quarantine "${SOURCE_APP_PATH}" || true
+  ATTACH_OUTPUT="$(hdiutil attach "${SOURCE_APP_PATH}" -nobrowse)"
+  MOUNT_DEVICE="$(printf '%s\n' "${ATTACH_OUTPUT}" | awk '/^\/dev\// {print $1; exit}')"
+  MOUNT_POINT="$(printf '%s\n' "${ATTACH_OUTPUT}" | awk -F '\t' '/\/Volumes\// {print $NF; exit}')"
+  if [[ -z "${MOUNT_POINT}" ]]; then
+    echo "Could not determine mounted DMG path."
+    exit 1
+  fi
+  SOURCE_APP_PATH="${MOUNT_POINT}/${APP_NAME}"
 fi
 
 if [[ ! -d "${SOURCE_APP_PATH}" ]]; then

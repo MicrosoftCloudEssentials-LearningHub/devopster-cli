@@ -471,11 +471,19 @@ jobs:
             ### macOS trust and verification
 
             - Stable releases are signed and notarized when Apple credentials are configured in CI.
+            - If macOS blocks opening the downloaded DMG itself, clear quarantine on the DMG and open it:
+
+            ```bash
+            DMG_PATH="$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"
+            xattr -dr com.apple.quarantine "$DMG_PATH"
+            open "$DMG_PATH"
+            ```
+
             - You can run the one-click installer from the mounted DMG or extracted assets:
 
             ```bash
             chmod +x ./DevOpster-macos-install.sh
-            ./DevOpster-macos-install.sh
+            ./DevOpster-macos-install.sh "$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"
             ```
 
             - If you are testing an unsigned prerelease build and Gatekeeper blocks launch, run with your chosen install path:
