@@ -492,6 +492,59 @@
       .inline-platform-icon--macos { color: #000000; }
       .inline-platform-icon--windows { color: #0f6cbd; }
       .inline-platform-icon--linux { color: #fcc624; }
+      .drag-flow {
+        margin: 10px 0 12px;
+        display: grid;
+        grid-template-columns: minmax(110px, 1fr) auto minmax(110px, 1fr);
+        gap: 14px;
+        align-items: center;
+        justify-items: center;
+        padding: 14px 12px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: linear-gradient(180deg, color-mix(in oklab, var(--card) 96%, var(--surface)), color-mix(in oklab, var(--surface) 62%, var(--card)));
+      }
+      .drag-node {
+        padding: 6px 4px;
+        text-align: center;
+      }
+      .drag-node img,
+      .drag-node .drag-folder {
+        width: 52px;
+        height: 52px;
+        margin: 0 auto 8px;
+        display: block;
+      }
+      .drag-folder {
+        border-radius: 12px;
+        background: linear-gradient(180deg, #9ad8ff 0%, #57baf2 100%);
+        position: relative;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 14px rgba(65, 136, 188, 0.18);
+      }
+      .drag-folder::before {
+        content: "";
+        position: absolute;
+        top: -6px;
+        left: 7px;
+        width: 22px;
+        height: 10px;
+        border-radius: 7px 7px 0 0;
+        background: #84d0ff;
+      }
+      .drag-label {
+        display: block;
+        color: var(--fg);
+        font-size: 0.78rem;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+      .drag-arrow {
+        font-size: 1.9rem;
+        color: var(--link);
+        font-weight: 700;
+        user-select: none;
+        line-height: 1;
+      }
       .platform-card-title { flex: 1; min-width: 0; }
       .platform-card-title h3 { margin: 0 0 2px; font-size: 1.1rem; }
       .platform-subtitle {
@@ -875,11 +928,16 @@
               <a class="download-label" id="dl-btn-macos" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Download DevOpster for macOS">↓ Download for macOS</a>
               <div class="asset-files" id="assets-macos"></div>
               <p class="platform-tip">
-                <strong>Install:</strong> open the <code>.dmg</code> and drag <code>DevOpster.app</code> into <code>/Applications</code>.
-                <br/><strong>If the DMG is blocked:</strong>
+                <strong>Step 1:</strong> open the <code>.dmg</code> and drag the app into Applications.
+                <span class="drag-flow" aria-hidden="true">
+                  <span class="drag-node"><img src="assets/icons/icon-192.png" alt="" loading="lazy"/><span class="drag-label">DevOpster.app</span></span>
+                  <span class="drag-arrow">→</span>
+                  <span class="drag-node"><span class="drag-folder"></span><span class="drag-label">Applications</span></span>
+                </span>
+                <strong>Optional:</strong> if macOS blocks the installed app at first launch, run:
+                <span class="copy-cmd" style="display:flex;align-items:center;gap:8px;margin-top:6px;"><code>xattr -cr /Applications/DevOpster.app</code><button type="button" class="copy-btn" data-copy='xattr -cr /Applications/DevOpster.app'>Copy</button></span>
+                <br/><strong>Troubleshoot (if DMG itself is blocked):</strong>
                 <span class="copy-cmd" style="display:flex;align-items:center;gap:8px;margin-top:6px;"><code>DMG_PATH="$(ls -t "$HOME"/Downloads/DevOpster*.dmg 2>/dev/null | head -n 1)"; test -n "$DMG_PATH" &amp;&amp; xattr -dr com.apple.quarantine "$DMG_PATH" &amp;&amp; open "$DMG_PATH"</code><button type="button" class="copy-btn" data-copy='DMG_PATH="$(ls -t "$HOME"/Downloads/DevOpster*.dmg 2>/dev/null | head -n 1)"; test -n "$DMG_PATH" && xattr -dr com.apple.quarantine "$DMG_PATH" && open "$DMG_PATH"'>Copy</button></span>
-                <br/><strong>If the installed app is blocked at first launch:</strong>
-                <span class="copy-cmd" style="display:flex;align-items:center;gap:8px;margin-top:6px;"><code>xattr -cr "/Applications/DevOpster.app"</code><button type="button" class="copy-btn" data-copy='xattr -cr "/Applications/DevOpster.app"'>Copy</button></span>
               </p>
             </article>
 
@@ -948,10 +1006,10 @@
                   macOS
                 </p>
                 <ol style="margin:0;padding-left:18px;color:var(--muted);font-size:0.84rem;line-height:1.7;">
-                  <li>Download the latest DMG from the macOS card. If macOS blocks opening the DMG itself, run: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -dr com.apple.quarantine "$HOME"/Downloads/DevOpster*.dmg</code></li>
-                  <li>Drag <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">DevOpster.app</code> to <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">/Applications</code>.</li>
-                  <li>Open the installed app normally.</li>
-                  <li>If Gatekeeper blocks first launch, run: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -cr "/Applications/DevOpster.app"</code></li>
+                  <li>Download and open the latest DMG from the macOS card.</li>
+                  <li>Drag <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">DevOpster.app</code> <strong>→</strong> <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">/Applications</code>.</li>
+                  <li>If first launch is blocked, you can run: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -cr /Applications/DevOpster.app</code></li>
+                  <li>If opening the DMG itself is blocked, run: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -dr com.apple.quarantine "$HOME"/Downloads/DevOpster*.dmg</code></li>
                 </ol>
               </div>
               <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);padding:18px 20px;">
