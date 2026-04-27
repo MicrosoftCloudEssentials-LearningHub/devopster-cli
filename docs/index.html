@@ -928,30 +928,9 @@
               <a class="download-label" id="dl-btn-macos" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Download DevOpster for macOS">↓ Download for macOS</a>
               <div class="asset-files" id="assets-macos"></div>
               <div class="platform-tip">
-                <p style="margin:0 0 12px;"><span style="display:inline-block;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:4px;margin-right:6px;">PREVIEW BUILD</span>Not yet notarized by Apple — macOS will block it. Pick the option that fits your situation:</p>
-
-                <div style="border:1px solid color-mix(in oklab,var(--border) 80%,transparent);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:color-mix(in oklab,var(--card) 55%,var(--surface));">
-                  <strong>Option A — Already saw "Not Opened"? (no Terminal needed)</strong>
-                  <ol style="margin:6px 0 0;padding-left:18px;line-height:1.9;">
-                    <li>Open <strong>System Settings</strong> → <strong>Privacy &amp; Security</strong></li>
-                    <li>Scroll to the Security section → click <strong>Open Anyway</strong> next to the blocked file</li>
-                    <li>Enter your Mac password — the DMG opens</li>
-                    <li>Drag <strong>DevOpster.app → Applications</strong> inside the DMG window</li>
-                  </ol>
-                </div>
-
-                <div style="border:1px solid color-mix(in oklab,var(--border) 80%,transparent);border-radius:8px;padding:10px 12px;margin-bottom:12px;background:color-mix(in oklab,var(--card) 55%,var(--surface));">
-                  <strong>Option B — Terminal (prevents the warning before opening)</strong>
-                  <span class="copy-cmd" style="display:flex;align-items:center;gap:8px;margin-top:6px;"><code style="font-size:11px;word-break:break-all;">DMG_PATH="$(ls -t "$HOME"/Downloads/DevOpster*.dmg 2>/dev/null | head -n 1)"; [ -n "$DMG_PATH" ] &amp;&amp; xattr -dr com.apple.quarantine "$DMG_PATH" &amp;&amp; open "$DMG_PATH"</code><button type="button" class="copy-btn" data-copy='DMG_PATH="$(ls -t "$HOME"/Downloads/DevOpster*.dmg 2>/dev/null | head -n 1)"; [ -n "$DMG_PATH" ] && xattr -dr com.apple.quarantine "$DMG_PATH" && open "$DMG_PATH"'>Copy</button></span>
-                  <span style="display:block;margin-top:6px;">Then drag the app into Applications:</span>
-                  <span class="drag-flow" aria-hidden="true" style="margin-top:8px;">
-                    <span class="drag-node"><img src="assets/icons/icon-192.png" alt="" loading="lazy"/><span class="drag-label">DevOpster.app</span></span>
-                    <span class="drag-arrow">→</span>
-                    <span class="drag-node"><span class="drag-folder"></span><span class="drag-label">Applications</span></span>
-                  </span>
-                </div>
-
-                <span style="display:block;font-size:12px;color:var(--fg-muted,#888);"><strong>Optional:</strong> if the app is still blocked at first launch: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -cr /Applications/DevOpster.app</code></span>
+                <strong>Gatekeeper:</strong> if macOS shows "Not Opened", open <strong>System Settings → Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>, then open the DMG again.
+                <span class="copy-cmd" style="display:flex;align-items:center;gap:8px;margin-top:6px;"><code>xattr -cr /Applications/DevOpster.app</code><button type="button" class="copy-btn" data-copy='xattr -cr /Applications/DevOpster.app'>Copy</button></span>
+                <span style="display:block;margin-top:6px;color:var(--fg-muted,#888);">Run this only if the installed app is blocked at first launch.</span>
               </div>
             </article>
 
@@ -1021,9 +1000,8 @@
                 </p>
                 <ol style="margin:0;padding-left:18px;color:var(--muted);font-size:0.84rem;line-height:1.7;">
                   <li>Download the DMG and double-click it.</li>
-                  <li>If macOS shows <strong>"Not Opened"</strong>: open <strong>System Settings → Privacy &amp; Security</strong>, scroll down, and click <strong>Open Anyway</strong> → enter your password.</li>
+                  <li>If macOS shows <strong>"Not Opened"</strong>, open <strong>System Settings → Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>.</li>
                   <li>Drag <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">DevOpster.app</code> <strong>→</strong> <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">/Applications</code>.</li>
-                  <li><em>Alternative:</em> instead of step 2, run in Terminal: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:10.5px;word-break:break-all;">xattr -dr com.apple.quarantine "$HOME"/Downloads/DevOpster*.dmg</code></li>
                   <li>If the app is still blocked at first launch: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -cr /Applications/DevOpster.app</code></li>
                 </ol>
               </div>
