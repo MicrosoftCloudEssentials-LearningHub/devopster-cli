@@ -927,18 +927,18 @@
               <p class="platform-desc">Best for end users who want the normal drag-to-Applications install flow.</p>
               <a class="download-label" id="dl-btn-macos" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Download DevOpster for macOS">↓ Download for macOS</a>
               <div class="asset-files" id="assets-macos"></div>
-              <p class="platform-tip">
-                <strong>Step 1:</strong> open the <code>.dmg</code> and drag the app into Applications.
-                <span class="drag-flow" aria-hidden="true">
+              <div class="platform-tip">
+                <p style="margin:0 0 10px;"><span style="display:inline-block;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:4px;margin-right:6px;">PREVIEW BUILD</span>This release is not yet notarized by Apple. Run the command below in Terminal <strong>before</strong> opening the DMG so macOS doesn't block it.</p>
+                <strong>Step 1 — Remove macOS quarantine (Terminal):</strong>
+                <span class="copy-cmd" style="display:flex;align-items:center;gap:8px;margin-top:6px;margin-bottom:12px;"><code style="font-size:12px;word-break:break-all;">DMG_PATH="$(ls -t "$HOME"/Downloads/DevOpster*.dmg 2>/dev/null | head -n 1)"; [ -n "$DMG_PATH" ] &amp;&amp; xattr -dr com.apple.quarantine "$DMG_PATH" &amp;&amp; open "$DMG_PATH"</code><button type="button" class="copy-btn" data-copy='DMG_PATH="$(ls -t "$HOME"/Downloads/DevOpster*.dmg 2>/dev/null | head -n 1)"; [ -n "$DMG_PATH" ] && xattr -dr com.apple.quarantine "$DMG_PATH" && open "$DMG_PATH"'>Copy</button></span>
+                <strong>Step 2 — Drag the app into Applications:</strong>
+                <span class="drag-flow" aria-hidden="true" style="margin-top:8px;">
                   <span class="drag-node"><img src="assets/icons/icon-192.png" alt="" loading="lazy"/><span class="drag-label">DevOpster.app</span></span>
                   <span class="drag-arrow">→</span>
                   <span class="drag-node"><span class="drag-folder"></span><span class="drag-label">Applications</span></span>
                 </span>
-                <strong>Optional:</strong> if macOS blocks the installed app at first launch, run:
-                <span class="copy-cmd" style="display:flex;align-items:center;gap:8px;margin-top:6px;"><code>xattr -cr /Applications/DevOpster.app</code><button type="button" class="copy-btn" data-copy='xattr -cr /Applications/DevOpster.app'>Copy</button></span>
-                <br/><strong>Troubleshoot (if DMG itself is blocked):</strong>
-                <span class="copy-cmd" style="display:flex;align-items:center;gap:8px;margin-top:6px;"><code>DMG_PATH="$(ls -t "$HOME"/Downloads/DevOpster*.dmg 2>/dev/null | head -n 1)"; test -n "$DMG_PATH" &amp;&amp; xattr -dr com.apple.quarantine "$DMG_PATH" &amp;&amp; open "$DMG_PATH"</code><button type="button" class="copy-btn" data-copy='DMG_PATH="$(ls -t "$HOME"/Downloads/DevOpster*.dmg 2>/dev/null | head -n 1)"; test -n "$DMG_PATH" && xattr -dr com.apple.quarantine "$DMG_PATH" && open "$DMG_PATH"'>Copy</button></span>
-              </p>
+                <span style="display:block;margin-top:10px;font-size:12px;color:var(--fg-muted,#888);"><strong>Optional:</strong> if the app is still blocked at first launch, run: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -cr /Applications/DevOpster.app</code></span>
+              </div>
             </article>
 
             <!-- Windows -->
@@ -1006,10 +1006,10 @@
                   macOS
                 </p>
                 <ol style="margin:0;padding-left:18px;color:var(--muted);font-size:0.84rem;line-height:1.7;">
-                  <li>Download and open the latest DMG from the macOS card.</li>
+                  <li>Download the DMG from the macOS card.</li>
+                  <li><strong>Before opening it</strong>, open Terminal and run:<br/><code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:11px;word-break:break-all;">DMG_PATH="$(ls -t "$HOME"/Downloads/DevOpster*.dmg 2>/dev/null | head -n 1)"; [ -n "$DMG_PATH" ] &amp;&amp; xattr -dr com.apple.quarantine "$DMG_PATH" &amp;&amp; open "$DMG_PATH"</code></li>
                   <li>Drag <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">DevOpster.app</code> <strong>→</strong> <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">/Applications</code>.</li>
-                  <li>If first launch is blocked, you can run: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -cr /Applications/DevOpster.app</code></li>
-                  <li>If opening the DMG itself is blocked, run: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -dr com.apple.quarantine "$HOME"/Downloads/DevOpster*.dmg</code></li>
+                  <li>If the app is still blocked at first launch, run: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -cr /Applications/DevOpster.app</code></li>
                 </ol>
               </div>
               <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);padding:18px 20px;">
