@@ -106,39 +106,6 @@ jobs:
       - name: Build Tauri bundle
         run: cargo tauri build --target ${{ matrix.target }}
 
-      - name: Inject installer scripts into DMG
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          set -euo pipefail
-          BUNDLE_ROOT="src-tauri/target/${{ matrix.target }}/release/bundle/dmg"
-          [ -d "$BUNDLE_ROOT" ] || { echo "No DMG bundle directory found"; exit 0; }
-          
-          for dmg in "$BUNDLE_ROOT"/*.dmg; do
-            [ -f "$dmg" ] || continue
-            echo "Injecting installer scripts into: $dmg"
-            
-            # Create temp mount point
-            MOUNT_POINT="/tmp/devopster-dmg-$$"
-            mkdir -p "$MOUNT_POINT"
-            
-            # Attach the DMG
-            hdiutil attach "$dmg" -mountpoint "$MOUNT_POINT" -nobrowse
-            
-            # Copy installer scripts into the mounted DMG
-            cp scripts/install-macos-app.sh "$MOUNT_POINT/DevOpster-macos-install.sh"
-            cp scripts/install-macos-app.command "$MOUNT_POINT/DevOpster-macos-install.command"
-            chmod +x "$MOUNT_POINT/DevOpster-macos-install.sh"
-            chmod +x "$MOUNT_POINT/DevOpster-macos-install.command"
-            
-            echo "Files added to DMG:"
-            ls -la "$MOUNT_POINT/" | grep -E '\.(sh|command)$' || true
-            
-            # Detach the DMG
-            hdiutil detach "$MOUNT_POINT"
-            rm -rf "$MOUNT_POINT"
-          done
-
       - name: Import Apple signing certificate
         if: runner.os == 'macOS'
         shell: bash
@@ -488,8 +455,6 @@ jobs:
             |---|---|---|
             | **macOS** | `*.dmg` | Recommended. Drag `DevOpster.app` to `/Applications` or `~/Applications` |
             | **macOS** | `*.app.tar.gz` | Advanced/manual extraction |
-            | **macOS** | `DevOpster-macos-install.command` | Double-click guided installer (choose install location) |
-            | **macOS** | `DevOpster-macos-install.sh` | One-click installer script (path-aware + quarantine clear) |
             | **Windows** | `*-setup.exe` | Recommended NSIS installer |
             | **Windows** | `*.msi` | MSI deployment/install option |
             | **Linux** | `*.AppImage` | `chmod +x DevOpster*.AppImage && ./DevOpster*.AppImage` |
@@ -507,19 +472,12 @@ jobs:
             open "$DMG_PATH"
             ```
 
-            - Easiest option: double-click `DevOpster-macos-install.command` from Finder.
-            - Terminal option:
+            - Install normally: open the DMG and drag `DevOpster.app` into `/Applications`.
+
+            - If Gatekeeper blocks first launch after you install the app, run:
 
             ```bash
-            chmod +x ./DevOpster-macos-install.sh
-            ./DevOpster-macos-install.sh "$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"
-            ```
-
-            - If you are testing an unsigned prerelease build and Gatekeeper blocks launch, run with your chosen install path:
-
-            ```bash
-            APP_PATH="$HOME/Applications/DevOpster.app"
-            xattr -cr "$APP_PATH"
+            xattr -cr "/Applications/DevOpster.app"
             ```
 
             ### Windows SmartScreen

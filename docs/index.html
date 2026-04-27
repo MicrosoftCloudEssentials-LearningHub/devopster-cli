@@ -23,8 +23,6 @@
     <link rel="icon" href="assets/icons/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/icon-16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/icon-32.png" />
-    <link rel="icon" type="image/png" sizes="48x48" href="assets/icons/icon-48.png" />
-    <link rel="icon" type="image/png" sizes="96x96" href="assets/icons/icon-96.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/icon-180.png" />
@@ -475,7 +473,7 @@
       .platform-icon img { width: 100%; height: 100%; display: block; object-fit: contain; }
       .platform-icon--macos { color: var(--fg); }
       .platform-icon--windows { color: #0f6cbd; }
-      .platform-icon--linux { color: #FCC624; }
+      .platform-icon--linux { color: #111111; }
       .platform-card-title { flex: 1; min-width: 0; }
       .platform-card-title h3 { margin: 0 0 2px; font-size: 1.1rem; }
       .platform-subtitle {
@@ -728,7 +726,7 @@
             <img src="https://github.com/Cloud2BR/devopster-cli/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status" loading="lazy" />
           </a>
           <!-- START BADGE -->
-          <span class="badge-link"><img src="https://img.shields.io/badge/Total%20views-216-limegreen" alt="Total views" loading="lazy" /></span>
+          <span class="badge-link"><img src="https://img.shields.io/badge/Total%20views-278-limegreen" alt="Total views" loading="lazy" /></span>
           <!-- END BADGE -->
           <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
         </div>
@@ -854,13 +852,12 @@
                   <p class="platform-subtitle">DMG first, .app.tar.gz fallback</p>
                 </div>
               </div>
-              <p class="platform-desc">Open the .dmg and find <code>DevOpster-macos-install.command</code> inside — double-click it for a guided install.</p>
+              <p class="platform-desc">Best for end users who want the normal drag-to-Applications install flow.</p>
               <a class="download-label" id="dl-btn-macos" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Download DevOpster for macOS">↓ Download for macOS</a>
               <div class="asset-files" id="assets-macos"></div>
               <p class="platform-tip">
-                <strong>Easiest:</strong> open the .dmg and double-click <code>DevOpster-macos-install.command</code> inside. It will handle quarantine removal and guide you through install.
-                <br/><strong>Manual:</strong> drag <code>DevOpster.app</code> from the .dmg into <code>/Applications</code>.
-                <br/><strong>Gatekeeper:</strong> if macOS blocks it at first launch:
+                <strong>Install:</strong> open the <code>.dmg</code> and drag <code>DevOpster.app</code> into <code>/Applications</code>.
+                <br/><strong>Gatekeeper:</strong> if macOS blocks it when you open the installed app, run:
                 <span class="copy-cmd" style="display:flex;align-items:center;gap:8px;margin-top:6px;"><code>xattr -cr "/Applications/DevOpster.app"</code><button type="button" class="copy-btn" data-copy='xattr -cr "/Applications/DevOpster.app"'>Copy</button></span>
               </p>
             </article>
@@ -881,11 +878,11 @@
                   <p class="platform-subtitle">NSIS installer first, MSI alternative</p>
                 </div>
               </div>
-              <p class="platform-desc">Best for Windows users who want a standard installer or an MSI deployment option.</p>
+              <p class="platform-desc">Best for Windows users who want a normal installer. The EXE or MSI installs DevOpster into the usual Windows location and adds the normal shortcuts.</p>
               <a class="download-label" id="dl-btn-windows" href="https://github.com/Cloud2BR/devopster-cli/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Download DevOpster for Windows">↓ Download for Windows</a>
               <div class="asset-files" id="assets-windows"></div>
               <p class="platform-tip">
-                <strong>SmartScreen:</strong> if Windows shows a warning, click <strong>More info</strong> and then <strong>Run anyway</strong> because the installer is not code-signed yet.
+                <strong>SmartScreen:</strong> if Windows shows a warning, click <strong>More info</strong> and then <strong>Run anyway</strong>. After setup finishes, launch DevOpster from the Start menu or desktop shortcut.
               </p>
             </article>
 
@@ -894,25 +891,13 @@
               <div class="platform-card-header">
                 <span class="platform-icon platform-icon--linux" aria-hidden="true">
                   <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Tux penguin body -->
-                    <ellipse cx="24" cy="26" rx="12" ry="14" fill="currentColor"/>
-                    <!-- Tux head -->
-                    <circle cx="24" cy="12" r="8" fill="currentColor"/>
-                    <!-- Tux belly -->
-                    <ellipse cx="24" cy="26" rx="8" ry="10" fill="#ffffff"/>
-                    <!-- Tux eyes -->
-                    <circle cx="20" cy="10" r="1.5" fill="#ffffff"/>
-                    <circle cx="28" cy="10" r="1.5" fill="#ffffff"/>
-                    <!-- Tux beak -->
-                    <path d="M24 13L26 15H22Z" fill="#FFA500"/>
-                    <!-- Tux left wing -->
-                    <ellipse cx="16" cy="26" rx="3" ry="8" fill="currentColor"/>
-                    <!-- Tux right wing -->
-                    <ellipse cx="32" cy="26" rx="3" ry="8" fill="currentColor"/>
-                    <!-- Tux left foot -->
-                    <ellipse cx="20" cy="40" rx="3" ry="2" fill="#FFA500"/>
-                    <!-- Tux right foot -->
-                    <ellipse cx="28" cy="40" rx="3" ry="2" fill="#FFA500"/>
+                    <path d="M24.049 7C19.979 7 17.421 10.306 17.421 14.604C17.421 16.2 17.721 17.314 18.384 18.801C15.591 20.442 13.837 23.989 13.837 28.455C13.837 34.781 18.159 41 24.049 41C29.939 41 34.261 34.781 34.261 28.455C34.261 24.002 32.49 20.445 29.714 18.805C30.376 17.329 30.676 16.214 30.676 14.604C30.676 10.306 28.118 7 24.049 7Z" fill="currentColor"/>
+                    <ellipse cx="21.2" cy="14.8" rx="1.35" ry="1.75" fill="#ffffff"/>
+                    <ellipse cx="26.8" cy="14.8" rx="1.35" ry="1.75" fill="#ffffff"/>
+                    <ellipse cx="21.2" cy="15.15" rx="0.48" ry="0.62" fill="#111111"/>
+                    <ellipse cx="26.8" cy="15.15" rx="0.48" ry="0.62" fill="#111111"/>
+                    <path d="M22.5 18.55C23.157 18.879 24.856 18.879 25.512 18.55" stroke="#E88800" stroke-width="1.7" stroke-linecap="round"/>
+                    <path d="M16 35.2C18.014 34.099 19.155 33.804 21.075 33.804C22.41 33.804 23.179 34.285 24.032 34.285C24.885 34.285 25.652 33.804 26.988 33.804C28.907 33.804 30.047 34.099 32.061 35.2" stroke="#E88800" stroke-width="2.2" stroke-linecap="round"/>
                   </svg>
                 </span>
                 <div class="platform-card-title">
@@ -940,9 +925,9 @@
                 </p>
                 <ol style="margin:0;padding-left:18px;color:var(--muted);font-size:0.84rem;line-height:1.7;">
                   <li>Download the latest DMG from the macOS card and open it.</li>
-                  <li><strong>Easiest: </strong> double-click <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">DevOpster-macos-install.command</code> inside the DMG. It will install and guide you.</li>
-                  <li><strong>Or manually: </strong> drag <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">DevOpster.app</code> to <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">/Applications</code>.</li>
-                  <li>If macOS blocks it at first launch, run: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -cr "/Applications/DevOpster.app"</code></li>
+                  <li>Drag <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">DevOpster.app</code> to <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">/Applications</code>.</li>
+                  <li>Open the installed app normally.</li>
+                  <li>If Gatekeeper blocks first launch, run: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -cr "/Applications/DevOpster.app"</code></li>
                 </ol>
               </div>
               <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);padding:18px 20px;">
