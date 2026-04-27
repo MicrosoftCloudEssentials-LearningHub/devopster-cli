@@ -461,8 +461,8 @@
         margin-bottom: 12px;
       }
       .platform-icon {
-        width: 36px;
-        height: 36px;
+        width: 48px;
+        height: 48px;
         flex-shrink: 0;
         display: flex;
         align-items: center;
@@ -471,9 +471,27 @@
       }
       .platform-icon svg { width: 100%; height: 100%; display: block; }
       .platform-icon img { width: 100%; height: 100%; display: block; object-fit: contain; }
-      .platform-icon--macos { color: #000000; }
-      .platform-icon--windows { color: #0078D4; }
-      .platform-icon--linux { color: #000000; }
+      .platform-icon--macos { color: #111111; }
+      .platform-icon--windows { color: #0f6cbd; }
+      .platform-icon--linux { color: #fcc624; }
+      .inline-platform-icon {
+        width: 18px;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .inline-platform-icon svg,
+      .inline-platform-icon img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
+      }
+      .inline-platform-icon--macos { color: #000000; }
+      .inline-platform-icon--windows { color: #0f6cbd; }
+      .inline-platform-icon--linux { color: #fcc624; }
       .platform-card-title { flex: 1; min-width: 0; }
       .platform-card-title h3 { margin: 0 0 2px; font-size: 1.1rem; }
       .platform-subtitle {
@@ -842,9 +860,10 @@
             <article class="platform-card" aria-label="DevOpster macOS download">
               <div class="platform-card-header">
                 <span class="platform-icon platform-icon--macos" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="Apple">
+                  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Apple">
                     <title>Apple</title>
-                    <path fill="currentColor" d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                    <path d="M30.085 10.5C28.96 11.875 27.12 12.942 25.28 12.792C25.042 10.993 25.955 9.128 27.019 7.86C28.195 6.46 30.215 5.479 31.84 5.4C31.982 7.291 31.298 9.08 30.085 10.5Z" fill="currentColor"/>
+                    <path d="M38.722 31.918C37.896 33.781 37.502 34.612 36.438 36.304C34.954 38.667 32.861 41.615 30.259 41.641C27.953 41.661 27.357 40.131 24.228 40.15C21.099 40.168 20.445 41.669 18.139 41.646C15.537 41.62 13.555 38.958 12.072 36.595C7.923 29.975 7.487 22.21 10.048 18.264C11.868 15.46 14.742 13.814 17.441 13.814C20.192 13.814 21.924 15.337 24.195 15.337C26.398 15.337 27.74 13.81 30.926 13.81C33.331 13.81 35.877 15.119 37.691 17.374C31.743 20.633 32.708 29.17 38.722 31.918Z" fill="currentColor"/>
                   </svg>
                 </span>
                 <div class="platform-card-title">
@@ -868,9 +887,12 @@
             <article class="platform-card" aria-label="DevOpster Windows download">
               <div class="platform-card-header">
                 <span class="platform-icon platform-icon--windows" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg" aria-label="Windows">
+                  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Windows">
                     <title>Windows</title>
-                    <path fill="currentColor" d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
+                    <path d="M6 10L22 8V22H6V10Z" fill="currentColor"/>
+                    <path d="M26 7L42 5V22H26V7Z" fill="currentColor" opacity="0.88"/>
+                    <path d="M6 26H22V40L6 38V26Z" fill="currentColor" opacity="0.88"/>
+                    <path d="M26 26H42V43L26 41V26Z" fill="currentColor"/>
                   </svg>
                 </span>
                 <div class="platform-card-title">
@@ -890,7 +912,10 @@
             <article class="platform-card" aria-label="DevOpster Linux download">
               <div class="platform-card-header">
                 <span class="platform-icon platform-icon--linux" aria-hidden="true">
-                  <img src="assets/icons/linux-tux.png" alt="" loading="lazy"/>
+                  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Linux">
+                    <title>Linux</title>
+                    <path d="M25.008 0c-.31 0-.632.015-.958.043-8.451.674-6.209 9.716-6.34 12.727-.15 2.185-.598 3.955-2.096 6.088-1.77 2.102-4.255 5.502-5.432 9.042-.557 1.662-.82 3.365-.573 4.973a.814.814 0 00-.219.272c-.519.536-.9 1.198-1.326 1.677-.397.397-.969.534-1.594.8-.627.272-1.317.54-1.728 1.36-.181.378-.272.788-.263 1.204 0 .397.052.8.11 1.072.116.798.232 1.456.08 1.938-.498 1.36-.559 2.29-.211 2.969.348.667 1.07.94 1.88 1.202 1.62.4 3.82.27 5.547 1.2 1.853.932 3.733 1.34 5.233.94 1.052-.232 1.94-.928 2.416-1.892 1.173-.006 2.46-.538 4.52-.668 1.397-.116 3.144.534 5.155.4.048.268.126.396.228.666l.006.006c.78 1.556 2.226 2.264 3.767 2.142 1.541-.12 3.184-1.072 4.514-2.612 1.263-1.53 3.365-2.168 4.756-3.005.696-.398 1.259-.938 1.299-1.706.046-.8-.4-1.622-1.428-2.752v-.194l-.006-.006c-.34-.4-.5-1.07-.676-1.852-.17-.802-.364-1.572-.984-2.092h-.006c-.118-.108-.246-.134-.376-.272a.714.714 0 00-.38-.128c.862-2.556.528-5.1-.346-7.388-1.066-2.82-2.93-5.276-4.35-6.966-1.593-2.01-3.153-3.914-3.12-6.736.053-4.304.473-12.266-7.09-12.278zm1.058 6.81h.025c.426 0 .793.125 1.168.396.38.27.66.664.876 1.066.21.518.315.918.332 1.448 0-.04.013-.08.013-.12v.21a.172.172 0 01-.008-.042l-.007-.048a3.614 3.614 0 01-.3 1.412 1.906 1.906 0 01-.426.67.71.71 0 00-.176-.086c-.208-.09-.396-.128-.568-.266a2.624 2.624 0 00-.44-.132c.1-.12.291-.266.366-.396.106-.256.164-.528.176-.804v-.04a2.42 2.42 0 00-.123-.8c-.09-.268-.202-.4-.366-.666-.167-.132-.334-.264-.534-.264h-.032c-.186 0-.352.06-.523.264a1.6 1.6 0 00-.41.668 2.36 2.36 0 00-.18.8v.038c.004.178.016.358.04.534-.385-.134-.875-.27-1.214-.404a3.27 3.27 0 01-.036-.4v-.04a3.544 3.544 0 01.3-1.536c.165-.44.464-.812.86-1.066a1.97 1.97 0 011.188-.4zm-5.924.118h.073c.283 0 .54.096.797.27.292.258.528.576.688.93.18.398.281.8.305 1.334v.008c.015.268.012.4-.004.532v.16c-.06.014-.111.036-.166.048-.303.11-.547.27-.786.4.024-.18.026-.36.006-.534v-.03c-.025-.266-.08-.4-.164-.666a1.226 1.226 0 00-.333-.534.496.496 0 00-.365-.128h-.042c-.142.012-.261.08-.372.264a1.104 1.104 0 00-.24.54 1.89 1.89 0 00-.046.66v.03c.024.27.074.4.16.668.092.268.196.4.333.536.02.018.041.036.068.048-.14.114-.233.14-.352.272a.608.608 0 01-.262.136 5.24 5.24 0 01-.55-.804 3.544 3.544 0 01-.31-1.334 3.518 3.518 0 01.16-1.336 2.86 2.86 0 01.566-1.07c.255-.266.521-.4.836-.4zm2.74 3.412c.663 0 1.465.13 2.43.798.587.4 1.047.538 2.104.936h.006c.51.272.809.532.956.798v-.262a1.142 1.142 0 01.032.94c-.246.62-1.031 1.286-2.124 1.684v.004c-.535.271-1.001.667-1.55.93-.551.271-1.175.584-2.024.533a2.278 2.278 0 01-.895-.133 3.57 3.57 0 01-.644-.396c-.39-.27-.726-.664-1.224-.93v-.01h-.01c-.798-.491-1.232-1.023-1.372-1.42-.14-.537-.01-.94.386-1.2.448-.27.76-.542.966-.672.208-.148.286-.204.352-.262h.004v-.006c.337-.404.872-.94 1.677-1.202.277-.072.587-.13.932-.13z" fill="currentColor" transform="translate(4,4) scale(0.8)"/>
+                  </svg>
                 </span>
                 <div class="platform-card-title">
                   <h3>Linux</h3>
@@ -913,7 +938,14 @@
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:16px;">
               <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);padding:18px 20px;">
                 <p style="font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px;">
-                  <span aria-hidden="true" style="font-size:1.1em;"></span> macOS
+                  <span class="inline-platform-icon inline-platform-icon--macos" aria-hidden="true">
+                    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Apple">
+                      <title>Apple</title>
+                      <path d="M30.085 10.5C28.96 11.875 27.12 12.942 25.28 12.792C25.042 10.993 25.955 9.128 27.019 7.86C28.195 6.46 30.215 5.479 31.84 5.4C31.982 7.291 31.298 9.08 30.085 10.5Z" fill="currentColor"/>
+                      <path d="M38.722 31.918C37.896 33.781 37.502 34.612 36.438 36.304C34.954 38.667 32.861 41.615 30.259 41.641C27.953 41.661 27.357 40.131 24.228 40.15C21.099 40.168 20.445 41.669 18.139 41.646C15.537 41.62 13.555 38.958 12.072 36.595C7.923 29.975 7.487 22.21 10.048 18.264C11.868 15.46 14.742 13.814 17.441 13.814C20.192 13.814 21.924 15.337 24.195 15.337C26.398 15.337 27.74 13.81 30.926 13.81C33.331 13.81 35.877 15.119 37.691 17.374C31.743 20.633 32.708 29.17 38.722 31.918Z" fill="currentColor"/>
+                    </svg>
+                  </span>
+                  macOS
                 </p>
                 <ol style="margin:0;padding-left:18px;color:var(--muted);font-size:0.84rem;line-height:1.7;">
                   <li>Download the latest DMG from the macOS card. If macOS blocks opening the DMG itself, run: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -dr com.apple.quarantine "$HOME"/Downloads/DevOpster*.dmg</code></li>
@@ -924,7 +956,16 @@
               </div>
               <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);padding:18px 20px;">
                 <p style="font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px;">
-                  <span aria-hidden="true" style="font-size:1.1em;">🪟</span> Windows
+                  <span class="inline-platform-icon inline-platform-icon--windows" aria-hidden="true">
+                    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Windows">
+                      <title>Windows</title>
+                      <path d="M6 10L22 8V22H6V10Z" fill="currentColor"/>
+                      <path d="M26 7L42 5V22H26V7Z" fill="currentColor" opacity="0.88"/>
+                      <path d="M6 26H22V40L6 38V26Z" fill="currentColor" opacity="0.88"/>
+                      <path d="M26 26H42V43L26 41V26Z" fill="currentColor"/>
+                    </svg>
+                  </span>
+                  Windows
                 </p>
                 <ol style="margin:0;padding-left:18px;color:var(--muted);font-size:0.84rem;line-height:1.7;">
                   <li>Download the <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">-setup.exe</code> from the Windows card.</li>
@@ -935,7 +976,13 @@
               </div>
               <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);padding:18px 20px;">
                 <p style="font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px;">
-                  <span aria-hidden="true" style="width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;"><img src="assets/icons/linux-tux.png" alt="" loading="lazy" style="width:100%;height:100%;object-fit:contain;display:block;"/></span> Linux
+                  <span class="inline-platform-icon inline-platform-icon--linux" aria-hidden="true">
+                    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Linux">
+                      <title>Linux</title>
+                      <path d="M25.008 0c-.31 0-.632.015-.958.043-8.451.674-6.209 9.716-6.34 12.727-.15 2.185-.598 3.955-2.096 6.088-1.77 2.102-4.255 5.502-5.432 9.042-.557 1.662-.82 3.365-.573 4.973a.814.814 0 00-.219.272c-.519.536-.9 1.198-1.326 1.677-.397.397-.969.534-1.594.8-.627.272-1.317.54-1.728 1.36-.181.378-.272.788-.263 1.204 0 .397.052.8.11 1.072.116.798.232 1.456.08 1.938-.498 1.36-.559 2.29-.211 2.969.348.667 1.07.94 1.88 1.202 1.62.4 3.82.27 5.547 1.2 1.853.932 3.733 1.34 5.233.94 1.052-.232 1.94-.928 2.416-1.892 1.173-.006 2.46-.538 4.52-.668 1.397-.116 3.144.534 5.155.4.048.268.126.396.228.666l.006.006c.78 1.556 2.226 2.264 3.767 2.142 1.541-.12 3.184-1.072 4.514-2.612 1.263-1.53 3.365-2.168 4.756-3.005.696-.398 1.259-.938 1.299-1.706.046-.8-.4-1.622-1.428-2.752v-.194l-.006-.006c-.34-.4-.5-1.07-.676-1.852-.17-.802-.364-1.572-.984-2.092h-.006c-.118-.108-.246-.134-.376-.272a.714.714 0 00-.38-.128c.862-2.556.528-5.1-.346-7.388-1.066-2.82-2.93-5.276-4.35-6.966-1.593-2.01-3.153-3.914-3.12-6.736.053-4.304.473-12.266-7.09-12.278zm1.058 6.81h.025c.426 0 .793.125 1.168.396.38.27.66.664.876 1.066.21.518.315.918.332 1.448 0-.04.013-.08.013-.12v.21a.172.172 0 01-.008-.042l-.007-.048a3.614 3.614 0 01-.3 1.412 1.906 1.906 0 01-.426.67.71.71 0 00-.176-.086c-.208-.09-.396-.128-.568-.266a2.624 2.624 0 00-.44-.132c.1-.12.291-.266.366-.396.106-.256.164-.528.176-.804v-.04a2.42 2.42 0 00-.123-.8c-.09-.268-.202-.4-.366-.666-.167-.132-.334-.264-.534-.264h-.032c-.186 0-.352.06-.523.264a1.6 1.6 0 00-.41.668 2.36 2.36 0 00-.18.8v.038c.004.178.016.358.04.534-.385-.134-.875-.27-1.214-.404a3.27 3.27 0 01-.036-.4v-.04a3.544 3.544 0 01.3-1.536c.165-.44.464-.812.86-1.066a1.97 1.97 0 011.188-.4zm-5.924.118h.073c.283 0 .54.096.797.27.292.258.528.576.688.93.18.398.281.8.305 1.334v.008c.015.268.012.4-.004.532v.16c-.06.014-.111.036-.166.048-.303.11-.547.27-.786.4.024-.18.026-.36.006-.534v-.03c-.025-.266-.08-.4-.164-.666a1.226 1.226 0 00-.333-.534.496.496 0 00-.365-.128h-.042c-.142.012-.261.08-.372.264a1.104 1.104 0 00-.24.54 1.89 1.89 0 00-.046.66v.03c.024.27.074.4.16.668.092.268.196.4.333.536.02.018.041.036.068.048-.14.114-.233.14-.352.272a.608.608 0 01-.262.136 5.24 5.24 0 01-.55-.804 3.544 3.544 0 01-.31-1.334 3.518 3.518 0 01.16-1.336 2.86 2.86 0 01.566-1.07c.255-.266.521-.4.836-.4zm2.74 3.412c.663 0 1.465.13 2.43.798.587.4 1.047.538 2.104.936h.006c.51.272.809.532.956.798v-.262a1.142 1.142 0 01.032.94c-.246.62-1.031 1.286-2.124 1.684v.004c-.535.271-1.001.667-1.55.93-.551.271-1.175.584-2.024.533a2.278 2.278 0 01-.895-.133 3.57 3.57 0 01-.644-.396c-.39-.27-.726-.664-1.224-.93v-.01h-.01c-.798-.491-1.232-1.023-1.372-1.42-.14-.537-.01-.94.386-1.2.448-.27.76-.542.966-.672.208-.148.286-.204.352-.262h.004v-.006c.337-.404.872-.94 1.677-1.202.277-.072.587-.13.932-.13z" fill="currentColor" transform="translate(4,4) scale(0.8)"/>
+                    </svg>
+                  </span>
+                  Linux
                 </p>
                 <ol style="margin:0;padding-left:18px;color:var(--muted);font-size:0.84rem;line-height:1.7;">
                   <li>Choose the artifact that fits your system: AppImage, DEB, or RPM.</li>
