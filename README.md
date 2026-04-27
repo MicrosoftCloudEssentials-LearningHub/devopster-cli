@@ -58,6 +58,7 @@ Current downloadable outputs:
 
 DevOpster now publishes one unified release (`v*` tags or manual dispatch with publish enabled) that includes both GUI installers and standalone CLI artifacts.
 Download from GitHub Releases and choose either the desktop installer (`.dmg`, `-setup.exe`/`.msi`, `.deb`/`.AppImage`/`.rpm`) or the standalone CLI artifact for your platform.
+Public macOS DMG releases require Apple Developer ID signing and notarization secrets in GitHub Actions; the release workflow now refuses to publish macOS installers without that configuration.
 
 End-user launch modes now included in artifacts:
 
