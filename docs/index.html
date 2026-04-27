@@ -857,7 +857,9 @@
               <div class="asset-files" id="assets-macos"></div>
               <p class="platform-tip">
                 <strong>Install:</strong> open the <code>.dmg</code> and drag <code>DevOpster.app</code> into <code>/Applications</code>.
-                <br/><strong>Gatekeeper:</strong> if macOS blocks it when you open the installed app, run:
+                <br/><strong>If the DMG is blocked:</strong>
+                <span class="copy-cmd" style="display:flex;align-items:center;gap:8px;margin-top:6px;"><code>DMG_PATH="$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"; xattr -dr com.apple.quarantine "$DMG_PATH"; open "$DMG_PATH"</code><button type="button" class="copy-btn" data-copy='DMG_PATH="$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"; xattr -dr com.apple.quarantine "$DMG_PATH"; open "$DMG_PATH"'>Copy</button></span>
+                <br/><strong>If the installed app is blocked at first launch:</strong>
                 <span class="copy-cmd" style="display:flex;align-items:center;gap:8px;margin-top:6px;"><code>xattr -cr "/Applications/DevOpster.app"</code><button type="button" class="copy-btn" data-copy='xattr -cr "/Applications/DevOpster.app"'>Copy</button></span>
               </p>
             </article>
@@ -924,7 +926,7 @@
                   <span aria-hidden="true" style="font-size:1.1em;"></span> macOS
                 </p>
                 <ol style="margin:0;padding-left:18px;color:var(--muted);font-size:0.84rem;line-height:1.7;">
-                  <li>Download the latest DMG from the macOS card and open it.</li>
+                  <li>Download the latest DMG from the macOS card. If macOS blocks opening the DMG itself, run: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -dr com.apple.quarantine "$HOME/Downloads/DevOpster_0.1.0_aarch64.dmg"</code></li>
                   <li>Drag <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">DevOpster.app</code> to <code style="background:var(--surface2);padding:1px 4px;border-radius:4px;">/Applications</code>.</li>
                   <li>Open the installed app normally.</li>
                   <li>If Gatekeeper blocks first launch, run: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">xattr -cr "/Applications/DevOpster.app"</code></li>
