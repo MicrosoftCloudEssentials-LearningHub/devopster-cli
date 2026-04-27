@@ -1283,7 +1283,7 @@
 
         function selectPreferredRelease(releases) {
           var valid = (releases || []).filter(function (x) {
-            return !x.draft && Array.isArray(x.assets) && x.assets.length > 0;
+            return !x.draft && !x.prerelease && Array.isArray(x.assets) && x.assets.length > 0;
           });
           var unified = valid.find(function (x) {
             return /^v/i.test(x.tag_name || '');
@@ -1312,7 +1312,7 @@
           })
           .catch(function () {
             if (statusEl) {
-              statusEl.innerHTML = 'No release artifacts found yet. Run a release workflow or open <a href="https://github.com/Cloud2BR/devopster-cli/releases" target="_blank" rel="noopener noreferrer">GitHub Releases</a>.';
+              statusEl.innerHTML = 'No stable release artifacts found yet. Open <a href="https://github.com/Cloud2BR/devopster-cli/releases" target="_blank" rel="noopener noreferrer">GitHub Releases</a> for prerelease or debug builds.';
             }
           });
 
