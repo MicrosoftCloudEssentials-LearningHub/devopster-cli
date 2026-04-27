@@ -1179,6 +1179,16 @@
           renderPlatform('linux', pickAssets(assets, 'linux'));
         }
 
+        function selectPreferredRelease(releases) {
+          var valid = (releases || []).filter(function (x) {
+            return !x.draft && Array.isArray(x.assets) && x.assets.length > 0;
+          });
+          var desktop = valid.find(function (x) {
+            return /^desktop-v/i.test(x.tag_name || '');
+          });
+          return desktop || valid[0];
+        }
+
         // Prefer a local JSON snapshot generated during Pages deploy.
         fetch('assets/releases/latest.json', { cache: 'no-store' })
           .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('Local snapshot missing')); })
@@ -1191,7 +1201,7 @@
             return fetch('https://api.github.com/repos/Cloud2BR/devopster-cli/releases?per_page=20', { cache: 'no-store' })
               .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('Release API failed')); })
               .then(function (releases) {
-                var rel = (releases || []).find(function (x) { return !x.draft && Array.isArray(x.assets) && x.assets.length > 0; });
+                var rel = selectPreferredRelease(releases);
                 applyRelease(rel);
               });
           })
