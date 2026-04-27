@@ -1272,7 +1272,11 @@
           }
           if (statusEl) {
             var published = rel.published_at ? new Date(rel.published_at).toLocaleDateString('en-US', {year:'numeric', month:'short', day:'numeric'}) : '';
-            statusEl.innerHTML = 'Latest published release: <strong>DevOpster ' + rel.tag_name + '</strong>' + (published ? ' &mdash; ' + published : '') + '. Use the platform cards below for direct artifact downloads and install steps.';
+            var releaseType = rel.prerelease ? 'Latest prerelease' : 'Latest published release';
+            var releaseNote = rel.prerelease
+              ? ' This is a prerelease/debug build.'
+              : ' Use the platform cards below for direct artifact downloads and install steps.';
+            statusEl.innerHTML = releaseType + ': <strong>DevOpster ' + rel.tag_name + '</strong>' + (published ? ' &mdash; ' + published : '') + '.' + releaseNote;
           }
 
           var assets = rel.assets || [];
@@ -1283,15 +1287,22 @@
 
         function selectPreferredRelease(releases) {
           var valid = (releases || []).filter(function (x) {
-            return !x.draft && !x.prerelease && Array.isArray(x.assets) && x.assets.length > 0;
+            return !x.draft && Array.isArray(x.assets) && x.assets.length > 0;
           });
-          var unified = valid.find(function (x) {
+          var stable = valid.filter(function (x) { return !x.prerelease; });
+          var stableUnified = stable.find(function (x) {
             return /^v/i.test(x.tag_name || '');
           });
-          var legacyDesktop = valid.find(function (x) {
+          var stableLegacyDesktop = stable.find(function (x) {
             return /^desktop-v/i.test(x.tag_name || '');
           });
-          return unified || legacyDesktop || valid[0];
+          var prereleaseUnified = valid.find(function (x) {
+            return x.prerelease && /^v/i.test(x.tag_name || '');
+          });
+          var prereleaseLegacyDesktop = valid.find(function (x) {
+            return x.prerelease && /^desktop-v/i.test(x.tag_name || '');
+          });
+          return stableUnified || stableLegacyDesktop || stable[0] || prereleaseUnified || prereleaseLegacyDesktop || valid[0];
         }
 
         // Prefer a local JSON snapshot generated during Pages deploy.
@@ -1312,7 +1323,7 @@
           })
           .catch(function () {
             if (statusEl) {
-              statusEl.innerHTML = 'No stable release artifacts found yet. Open <a href="https://github.com/Cloud2BR/devopster-cli/releases" target="_blank" rel="noopener noreferrer">GitHub Releases</a> for prerelease or debug builds.';
+              statusEl.innerHTML = 'No release artifacts found yet. Open <a href="https://github.com/Cloud2BR/devopster-cli/releases" target="_blank" rel="noopener noreferrer">GitHub Releases</a>.';
             }
           });
 
