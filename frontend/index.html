@@ -54,6 +54,21 @@
     </div>
 
     <div id="toast" class="toast"></div>
+    <div id="cli-drawer" class="cli-drawer" aria-hidden="true">
+      <div class="cli-drawer-header">
+        <div class="cli-drawer-title">CLI Mode</div>
+        <div class="cli-drawer-actions">
+          <button id="cli-clear" class="btn" type="button">Clear</button>
+          <button id="cli-close" class="btn" type="button">Close</button>
+        </div>
+      </div>
+      <div class="cli-drawer-toolbar">
+        <input id="cli-input" class="input" type="text" placeholder="e.g. repo audit --report-only" autocomplete="off" />
+        <button id="cli-run" class="btn btn-primary" type="button">Run</button>
+      </div>
+      <pre id="cli-output" class="console cli-console">Ready.
+</pre>
+    </div>
 
     <script type="module" src="app.js"></script>
   </body>

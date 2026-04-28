@@ -11,6 +11,12 @@ const routeTitle = document.getElementById("route-title");
 const routeSub = document.getElementById("route-sub");
 const topbarActions = document.getElementById("topbar-actions");
 const toastEl = document.getElementById("toast");
+const cliDrawer = document.getElementById("cli-drawer");
+const cliInput = document.getElementById("cli-input");
+const cliRun = document.getElementById("cli-run");
+const cliClear = document.getElementById("cli-clear");
+const cliClose = document.getElementById("cli-close");
+const cliOutput = document.getElementById("cli-output");
 
 let env = null;
 let currentRoute = "dashboard";
@@ -44,6 +50,10 @@ function toast(msg, kind = "") {
 
 function setActions(buttons) {
   clear(topbarActions);
+  if (!setActions._cliBtn) {
+    setActions._cliBtn = actionBtn("CLI Panel", () => toggleCliDrawer());
+  }
+  topbarActions.appendChild(setActions._cliBtn);
   for (const b of buttons) topbarActions.appendChild(b);
 }
 
@@ -61,6 +71,24 @@ function loading(text = "Loading…") {
 
 function emptyState(text) {
   return el("div", { class: "empty" }, text);
+}
+
+function renderCliOutput() {
+  if (!cliOutput) return;
+  cliOutput.textContent = consoleBuffer.join("") || "Ready.\n";
+  cliOutput.scrollTop = cliOutput.scrollHeight;
+}
+
+function setCliOpen(open) {
+  document.body.classList.toggle("cli-open", open);
+  if (cliDrawer) cliDrawer.setAttribute("aria-hidden", open ? "false" : "true");
+  if (open && cliInput) cliInput.focus();
+  if (open) renderCliOutput();
+}
+
+function toggleCliDrawer(force) {
+  const isOpen = document.body.classList.contains("cli-open");
+  setCliOpen(typeof force === "boolean" ? force : !isOpen);
 }
 
 // ───── routes ─────────────────────────────────────────────────────
@@ -163,7 +191,7 @@ async function renderDiagnostics() {
 
     setActions([
       actionBtn("Re-run", renderDiagnostics),
-      actionBtn("Open CLI mode", () => navigate("console")),
+      actionBtn("Open CLI mode", () => setCliOpen(true)),
     ]);
   } catch (err) {
     clear(view);
@@ -429,46 +457,17 @@ async function renderConfig() {
 
 // ───── CONSOLE (live streaming arbitrary commands) ────────────────
 async function renderConsole() {
-  setHeader("CLI Mode", "Run any allow-listed devopster subcommand with live output.");
+  setHeader("CLI Mode", "Run devopster commands without leaving the app.");
   clear(view);
-
-  const input = el("input", {
-    class: "input", placeholder: "e.g. repo audit --report-only", autocomplete: "off",
-    style: "width:auto;flex:1;min-width:240px",
-  });
-  const runBtn = btn("Run", "btn-primary", run);
-  const clearBtn = btn("Clear", "btn", () => { consoleBuffer = []; renderConsoleOut(); });
-
-  const toolbar = el("div", { class: "toolbar" }, [input, runBtn, clearBtn]);
-  view.appendChild(toolbar);
-
-  const out = el("pre", { id: "console-out", class: "console", text: consoleBuffer.join("") || "Ready.\n" });
-  view.appendChild(out);
-
-  input.addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
-
-  function renderConsoleOut() {
-    const node = document.getElementById("console-out");
-    if (node) { node.textContent = consoleBuffer.join("") || "Ready.\n"; node.scrollTop = node.scrollHeight; }
-  }
-
-  async function run() {
-    const raw = input.value.trim();
-    if (!raw) return;
-    const args = parseArgs(raw);
-    consoleBuffer.push(`\n$ devopster ${args.join(" ")}\n`);
-    renderConsoleOut();
-    runBtn.disabled = true;
-    try {
-      const code = await streamCmd(args, raw);
-      consoleBuffer.push(`\n[exit ${code}]\n`);
-    } catch (err) {
-      consoleBuffer.push(`\n[error] ${err}\n`);
-    } finally {
-      runBtn.disabled = false;
-      renderConsoleOut();
-    }
-  }
+  view.appendChild(el("div", { class: "card" }, [
+    el("h3", { text: "CLI Mode" }),
+    el("p", { text: "The CLI panel is always available at the bottom of the app. Use it to run any allow-listed devopster command." }),
+    el("div", { style: "margin-top:12px;display:flex;gap:8px;flex-wrap:wrap" }, [
+      btn("Open CLI panel", "btn-primary", () => setCliOpen(true)),
+      btn("Clear output", "btn", () => { consoleBuffer = []; renderCliOutput(); }),
+    ]),
+  ]));
+  setCliOpen(true);
 }
 
 function parseArgs(raw) {
@@ -485,17 +484,38 @@ async function streamCmd(args, label) {
     streamCmd._subscribed = true;
     await listen("devopster:stdout", (ev) => {
       consoleBuffer.push(ev.payload + "\n");
-      const node = document.getElementById("console-out");
-      if (node) { node.textContent = consoleBuffer.join("") || "Ready.\n"; node.scrollTop = node.scrollHeight; }
+      renderCliOutput();
     });
     await listen("devopster:stderr", (ev) => {
       consoleBuffer.push(`[err] ${ev.payload}\n`);
-      const node = document.getElementById("console-out");
-      if (node) { node.textContent = consoleBuffer.join("") || "Ready.\n"; node.scrollTop = node.scrollHeight; }
+      renderCliOutput();
     });
   }
   return await invoke("stream_devopster", { args });
 }
+
+async function runCliFromDrawer() {
+  const raw = (cliInput?.value || "").trim();
+  if (!raw) return;
+  const args = parseArgs(raw);
+  consoleBuffer.push(`\n$ devopster ${args.join(" ")}\n`);
+  renderCliOutput();
+  if (cliRun) cliRun.disabled = true;
+  try {
+    const code = await streamCmd(args, raw);
+    consoleBuffer.push(`\n[exit ${code}]\n`);
+  } catch (err) {
+    consoleBuffer.push(`\n[error] ${err}\n`);
+  } finally {
+    if (cliRun) cliRun.disabled = false;
+    renderCliOutput();
+  }
+}
+
+if (cliRun) cliRun.addEventListener("click", runCliFromDrawer);
+if (cliInput) cliInput.addEventListener("keydown", (e) => { if (e.key === "Enter") runCliFromDrawer(); });
+if (cliClear) cliClear.addEventListener("click", () => { consoleBuffer = []; renderCliOutput(); });
+if (cliClose) cliClose.addEventListener("click", () => setCliOpen(false));
 
 // ───── boot ───────────────────────────────────────────────────────
 (async function boot() {
