@@ -31,11 +31,13 @@ let consoleBuffer = [];
 let cliHistory = [];
 let cliSaved = [];
 let cliStateLoaded = false;
+let currentTheme = "light";
 
 const HISTORY_LIMIT = 50;
 const HISTORY_KEY = "devopsterCliHistory";
 const SAVED_KEY = "devopsterCliSaved";
 const BUFFER_LIMIT = 3000;
+const THEME_KEY = "devopsterTheme";
 
 // ───── helpers ─────────────────────────────────────────────────────
 function el(tag, props = {}, children = []) {
@@ -68,7 +70,12 @@ function setActions(buttons) {
   if (!setActions._cliBtn) {
     setActions._cliBtn = actionBtn("CLI Panel", () => toggleCliDrawer());
   }
+  if (!setActions._themeBtn) {
+    setActions._themeBtn = actionBtn("", () => toggleTheme());
+  }
+  updateThemeButton();
   topbarActions.appendChild(setActions._cliBtn);
+  topbarActions.appendChild(setActions._themeBtn);
   for (const b of buttons) topbarActions.appendChild(b);
 }
 
@@ -86,6 +93,37 @@ function loading(text = "Loading…") {
 
 function emptyState(text) {
   return el("div", { class: "empty" }, text);
+}
+
+function applyTheme(theme, persist = true) {
+  currentTheme = theme === "dark" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", currentTheme);
+  updateThemeButton();
+  if (persist) {
+    try { localStorage.setItem(THEME_KEY, currentTheme); } catch (err) {}
+  }
+}
+
+function updateThemeButton() {
+  if (!setActions._themeBtn) return;
+  const nextLabel = currentTheme === "dark" ? "☀️ Light" : "🌙 Dark";
+  setActions._themeBtn.textContent = nextLabel;
+  setActions._themeBtn.setAttribute(
+    "aria-label",
+    currentTheme === "dark" ? "Switch to light theme" : "Switch to dark theme"
+  );
+}
+
+function toggleTheme() {
+  applyTheme(currentTheme === "dark" ? "light" : "dark");
+}
+
+function initTheme() {
+  let stored = null;
+  try { stored = localStorage.getItem(THEME_KEY); } catch (err) {}
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const next = stored || (prefersDark ? "dark" : "light");
+  applyTheme(next, false);
 }
 
 function trimConsoleBuffer() {
@@ -689,6 +727,7 @@ cliTabs.forEach((btn) => {
 
 // ───── boot ───────────────────────────────────────────────────────
 (async function boot() {
+  initTheme();
   ensureCliState();
   try {
     env = await invoke("env_info");
