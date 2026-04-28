@@ -46,7 +46,7 @@ mkdir -p src-tauri/binaries
 cp target/release/devopster src-tauri/binaries/devopster
 ```
 
-In production this is automated by the `release-artifacts.yml` workflow.
+In production this is automated by the `desktop-app.yml` workflow (Unified App Release).
 
 ## Run
 

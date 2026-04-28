@@ -44,19 +44,18 @@ Last updated: 2026-04-24
 
 ## Release Automation
 
-This repository now includes automated build artifacts on GitHub Actions:
+Releases are built by the **Unified App Release (CLI + GUI)** workflow.
 
-- On every merge to `main`: builds downloadable CLI artifacts for Linux, Windows, and macOS.
-- On version tags like `v1.0.0`: publishes those artifacts to a GitHub Release.
+- Triggered by pushing a `v*` tag or running the workflow manually with publish enabled.
+- Each release ships both native desktop installers and standalone CLI artifacts from the same version.
 
-Current downloadable outputs:
+Current release outputs include:
 
-- `devopster-linux-x86_64.tar.gz` (CLI binary + Linux desktop metadata + GUI launcher script)
-- `devopster-windows-x86_64.zip` (CLI binary + GUI launcher cmd + `.ico` icon)
-- `devopster-macos-x86_64.tar.gz` (CLI binary + `.icns` icon)
-- `devopster-macos.dmg` (includes CLI files plus native `DevOpster GUI.app` bundle)
+- macOS: `DevOpster_<version>_arm64.dmg`, `DevOpster_<version>_arm64.app.tar.gz`, `devopster-cli-macos-arm64.tar.gz` (plus Intel variants when enabled)
+- Windows: `DevOpster_<version>_x64-setup.exe`, `DevOpster_<version>_x64_en-US.msi`, `devopster-cli-windows-x86_64.exe`
+- Linux: `DevOpster_<version>_amd64.deb`, `DevOpster_<version>_amd64.AppImage`, `DevOpster-<version>-1.x86_64.rpm`, `devopster-cli-linux-x86_64.tar.gz`
 
-DevOpster now publishes one unified release (`v*` tags or manual dispatch with publish enabled) that includes both GUI installers and standalone CLI artifacts.
+DevOpster publishes one unified release stream (`v*` tags or manual dispatch with publish enabled) that includes both GUI installers and standalone CLI artifacts.
 Download from GitHub Releases and choose either the desktop installer (`.dmg`, `-setup.exe`/`.msi`, `.deb`/`.AppImage`/`.rpm`) or the standalone CLI artifact for your platform.
 Public macOS DMG releases require Apple Developer ID signing and notarization secrets in GitHub Actions; the release workflow now refuses to publish macOS installers without that configuration.
 

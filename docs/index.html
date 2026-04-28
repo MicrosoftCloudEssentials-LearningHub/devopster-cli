@@ -630,18 +630,6 @@
         border-radius: 5px;
         font-size: 0.88em;
       }
-      /* legacy .platform-note kept for compat */
-      .platform-note { display: none; }
-      .platform-note .copy-cmd {
-        width: 100%;
-        box-sizing: border-box;
-        overflow: hidden;
-        white-space: normal;
-      }
-      .platform-note .copy-cmd code {
-        white-space: normal;
-      }
-
       /* ── Identity section ── */
       .identity-section {
         padding: 36px 0 42px;
@@ -789,9 +777,6 @@
         <div class="hero-bar">
           <a class="badge-link" href="https://github.com/Cloud2BR/devopster-cli/actions/workflows/deploy-pages.yml" target="_blank" rel="noopener noreferrer">
             <img src="https://github.com/Cloud2BR/devopster-cli/actions/workflows/deploy-pages.yml/badge.svg?branch=main" alt="Deploy GitHub Pages status" loading="lazy" />
-          </a>
-          <a class="badge-link" href="https://github.com/Cloud2BR/devopster-cli/actions/workflows/release-artifacts.yml" target="_blank" rel="noopener noreferrer">
-            <img src="https://github.com/Cloud2BR/devopster-cli/actions/workflows/release-artifacts.yml/badge.svg?branch=main" alt="Build Release Artifacts status" loading="lazy" />
           </a>
           <a class="badge-link" href="https://github.com/Cloud2BR/devopster-cli/actions/workflows/ci.yml" target="_blank" rel="noopener noreferrer">
             <img src="https://github.com/Cloud2BR/devopster-cli/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status" loading="lazy" />
@@ -1283,16 +1268,10 @@
           var stableUnified = stable.find(function (x) {
             return /^v/i.test(x.tag_name || '');
           });
-          var stableLegacyDesktop = stable.find(function (x) {
-            return /^desktop-v/i.test(x.tag_name || '');
-          });
           var prereleaseUnified = valid.find(function (x) {
             return x.prerelease && /^v/i.test(x.tag_name || '');
           });
-          var prereleaseLegacyDesktop = valid.find(function (x) {
-            return x.prerelease && /^desktop-v/i.test(x.tag_name || '');
-          });
-          return stableUnified || stableLegacyDesktop || stable[0] || prereleaseUnified || prereleaseLegacyDesktop || valid[0];
+          return stableUnified || stable[0] || prereleaseUnified || valid[0];
         }
 
         // Prefer a local JSON snapshot generated during Pages deploy.

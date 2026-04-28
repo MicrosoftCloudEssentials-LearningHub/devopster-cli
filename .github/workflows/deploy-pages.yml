@@ -56,10 +56,8 @@ jobs:
               | jq 'def valid: map(select((.draft | not) and (.assets | length > 0)));
                 def stable: map(select(.prerelease | not));
                 def stable_unified: stable | map(select((.tag_name // "") | test("^v")));
-                def stable_legacy_desktop: stable | map(select((.tag_name // "") | test("^desktop-v")));
                 def prerelease_unified: valid | map(select(.prerelease and ((.tag_name // "") | test("^v"))));
-                def prerelease_legacy_desktop: valid | map(select(.prerelease and ((.tag_name // "") | test("^desktop-v"))));
-                (stable_unified | .[0]) // (stable_legacy_desktop | .[0]) // (stable | .[0]) // (prerelease_unified | .[0]) // (prerelease_legacy_desktop | .[0]) // (valid | .[0]) // {}' \
+                (stable_unified | .[0]) // (stable | .[0]) // (prerelease_unified | .[0]) // (valid | .[0]) // {}' \
           > _site/assets/releases/latest.json
 
       - name: Upload Pages artifact
